@@ -1,3 +1,4 @@
+// HomePage.jsx
 import React, { useEffect, useState } from 'react';
 import {
   AppBar,
@@ -12,11 +13,13 @@ import {
   Grow,
   Zoom,
 } from '@mui/material';
+import RegistrationForm from '../components/RegistrationForm';  // Import the RegistrationForm
 
 const HomePage = () => {
   const [showFeatureCards, setShowFeatureCards] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading");
+  const [registerOpen, setRegisterOpen] = useState(false);  // State for dialog
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -119,6 +122,7 @@ const HomePage = () => {
                   <Button
                     color="inherit"
                     variant="contained"
+                    onClick={() => setRegisterOpen(true)} // Open the registration dialog
                     sx={{
                       borderRadius: '20px',
                       backgroundColor: '#FF5722',
@@ -138,7 +142,6 @@ const HomePage = () => {
                 </Box>
               </Toolbar>
             </AppBar>
-
           </Fade>
 
           <Container maxWidth="lg" sx={{ marginTop: 4 }}>
@@ -231,6 +234,9 @@ const HomePage = () => {
               </Grid>
             </Box>
           </Container>
+
+          {/* Registration Form Dialog */}
+          <RegistrationForm open={registerOpen} onClose={() => setRegisterOpen(false)} />
         </>
       )}
     </Box>
