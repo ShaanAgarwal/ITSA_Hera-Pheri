@@ -173,5 +173,21 @@ def get_courses(teacher_id):
     course_list = [{'id': str(course['_id']), 'courseName': course['courseName']} for course in courses]
     return jsonify(course_list), 200
 
+@app.route('/course/<course_id>', methods=['GET'])
+def get_course_details(course_id):
+    course = mongo.db.courses.find_one({'_id': ObjectId(course_id)})
+    
+    if course:
+        return jsonify({
+            'id': str(course['_id']),
+            'courseName': course['courseName'],
+            'courseDescription': course['courseDescription'],
+            'coursePassword': course['coursePassword']
+        }), 200
+    
+    return jsonify({'error': 'Course not found'}), 404
+
+
+
 if __name__ == '__main__':
     app.run(debug=True)

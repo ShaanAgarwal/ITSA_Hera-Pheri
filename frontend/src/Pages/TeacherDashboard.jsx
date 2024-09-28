@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom'; // Import Link for navigation
 import Navbar from '../components/Teacher/Navbar';
 import Sidebar from '../components/Teacher/Sidebar';
 import AddCourse from '../components/Teacher/AddCourse';
@@ -53,7 +54,7 @@ const TeacherDashboard = () => {
     };
 
     const handleCourseAdded = () => {
-        handleViewCourses(); // Refresh courses after adding a new one
+        handleViewCourses();
     };
 
     if (loading) {
@@ -75,7 +76,9 @@ const TeacherDashboard = () => {
                         <h2>My Courses</h2>
                         <ul>
                             {courses.map(course => (
-                                <li key={course._id}>{course.courseName}</li>
+                                <li key={course.id}>
+                                    <Link to={`/course/${course.id}`}>{course.courseName}</Link>
+                                </li>
                             ))}
                         </ul>
                     </div>
