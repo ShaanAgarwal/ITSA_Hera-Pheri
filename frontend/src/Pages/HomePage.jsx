@@ -117,6 +117,7 @@ const HomePage = () => {
                       fontWeight: 'bold',
                       color: '#fff',
                       fontFamily: 'Arial, sans-serif',
+                      transition: '0.3s',
                     }}
                   >
                     Login
@@ -137,6 +138,7 @@ const HomePage = () => {
                       boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
                       color: '#fff',
                       fontFamily: 'Arial, sans-serif',
+                      transition: '0.3s',
                     }}
                   >
                     Register
@@ -156,12 +158,12 @@ const HomePage = () => {
                   Streamlining assignment submissions and grading for students and teachers.
                 </Typography>
                 <Zoom in timeout={1000}>
-                  <Button variant="contained" color="primary" size="large" sx={{ marginRight: 2, borderRadius: '25px', boxShadow: 2 }}>
+                  <Button variant="contained" color="primary" size="large" sx={{ marginRight: 2, borderRadius: '25px', boxShadow: 2, transition: '0.3s' }}>
                     Get Started
                   </Button>
                 </Zoom>
                 <Zoom in timeout={1500}>
-                  <Button variant="outlined" color="secondary" size="large" sx={{ borderRadius: '25px', boxShadow: 1 }}>
+                  <Button variant="outlined" color="secondary" size="large" sx={{ borderRadius: '25px', boxShadow: 1, transition: '0.3s' }}>
                     Learn More
                   </Button>
                 </Zoom>
@@ -175,6 +177,10 @@ const HomePage = () => {
                     borderRadius: '15px',
                     background: 'linear-gradient(to bottom, #FFFFFF, #F3F4F6)',
                     boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
+                    transition: '0.3s',
+                    '&:hover': {
+                      boxShadow: '0 8px 40px rgba(0,0,0,0.2)',
+                    },
                   }}
                 >
                   <Typography variant="h5" gutterBottom>
@@ -196,7 +202,7 @@ const HomePage = () => {
                   <>
                     <Grow in timeout={1000}>
                       <Grid item xs={12} sm={4}>
-                        <Paper elevation={2} sx={{ padding: 3, textAlign: 'center', borderRadius: '15px', background: '#FFF5E1', transition: '0.3s', '&:hover': { boxShadow: 4 } }}>
+                        <Paper elevation={3} sx={{ padding: 3, textAlign: 'center', borderRadius: '15px', background: '#FFF5E1', transition: '0.3s', '&:hover': { boxShadow: 6 } }}>
                           <Typography variant="h5" gutterBottom>
                             Assignment Submission
                           </Typography>
@@ -208,7 +214,7 @@ const HomePage = () => {
                     </Grow>
                     <Grow in timeout={1200}>
                       <Grid item xs={12} sm={4}>
-                        <Paper elevation={2} sx={{ padding: 3, textAlign: 'center', borderRadius: '15px', background: '#D1E8FF', transition: '0.3s', '&:hover': { boxShadow: 4 } }}>
+                        <Paper elevation={3} sx={{ padding: 3, textAlign: 'center', borderRadius: '15px', background: '#D1E8FF', transition: '0.3s', '&:hover': { boxShadow: 6 } }}>
                           <Typography variant="h5" gutterBottom>
                             Teacher Review & Grading
                           </Typography>
@@ -220,7 +226,7 @@ const HomePage = () => {
                     </Grow>
                     <Grow in timeout={1400}>
                       <Grid item xs={12} sm={4}>
-                        <Paper elevation={2} sx={{ padding: 3, textAlign: 'center', borderRadius: '15px', background: '#E1FFD5', transition: '0.3s', '&:hover': { boxShadow: 4 } }}>
+                        <Paper elevation={3} sx={{ padding: 3, textAlign: 'center', borderRadius: '15px', background: '#E1FFD5', transition: '0.3s', '&:hover': { boxShadow: 6 } }}>
                           <Typography variant="h5" gutterBottom>
                             Notifications
                           </Typography>

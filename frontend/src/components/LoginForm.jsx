@@ -13,6 +13,7 @@ import {
   FormControl,
   InputLabel,
   FormHelperText,
+  CircularProgress,
 } from '@mui/material';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
@@ -26,7 +27,8 @@ const LoginForm = ({ open, onClose }) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
-  
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,18 +36,10 @@ const LoginForm = ({ open, onClose }) => {
       try {
         const response = await axios.get('http://localhost:5000/institutes');
         setInstitutes(response.data);
-
         if (response.data.length > 0) {
           const firstInstitute = response.data[0];
           const instituteId = firstInstitute._id || firstInstitute.id;
-          if (instituteId) {
-            setSelectedInstitute(String(instituteId));
-          } else {
-            console.warn('First institute does not have _id or id:', firstInstitute);
-            setSelectedInstitute('');
-          }
-        } else {
-          setSelectedInstitute('');
+          setSelectedInstitute(String(instituteId));
         }
       } catch (error) {
         console.error('Error fetching institutes:', error);
@@ -77,6 +71,7 @@ const LoginForm = ({ open, onClose }) => {
       return;
     }
 
+    setLoading(true);
     const loginData = {
       username,
       password,
@@ -89,21 +84,12 @@ const LoginForm = ({ open, onClose }) => {
       if (response.status === 200) {
         setSnackbarMessage('Login successful!');
         setSnackbarSeverity('success');
-        
+
         localStorage.setItem('userId', response.data.user.id);
         localStorage.setItem('username', response.data.user.username);
         localStorage.setItem('userType', response.data.user.userType);
 
-        if (userType === 'admin') {
-          navigate('/admindashboard');
-        } else if(userType == 'teacher') {
-            navigate('/teacherdashboard');
-        } else {
-            navigate('/studentdashboard');
-        }
-      } else {
-        setSnackbarMessage('Unexpected response. Please try again.');
-        setSnackbarSeverity('warning');
+        navigate(userType === 'admin' ? '/admindashboard' : userType === 'teacher' ? '/teacherdashboard' : '/studentdashboard');
       }
     } catch (error) {
       console.error('Error during login:', error);
@@ -111,6 +97,7 @@ const LoginForm = ({ open, onClose }) => {
       setSnackbarMessage(message);
       setSnackbarSeverity('error');
     } finally {
+      setLoading(false);
       setSnackbarOpen(true);
     }
   };
@@ -131,19 +118,13 @@ const LoginForm = ({ open, onClose }) => {
             <InputLabel>Institute</InputLabel>
             <Select
               value={selectedInstitute || ''}
-              onChange={(e) => {
-                setSelectedInstitute(e.target.value);
-              }}
+              onChange={(e) => setSelectedInstitute(e.target.value)}
               label="Institute"
               required
             >
               {institutes.length > 0 ? (
                 institutes.map((institute) => {
                   const instituteId = institute._id || institute.id;
-                  if (!instituteId) {
-                    console.warn('Institute missing _id or id:', institute);
-                    return null;
-                  }
                   return (
                     <MenuItem key={String(instituteId)} value={String(instituteId)}>
                       {institute.instituteName}
@@ -166,15 +147,9 @@ const LoginForm = ({ open, onClose }) => {
               onChange={(e) => setUserType(e.target.value)}
               label="User Type"
             >
-              <MenuItem key="admin" value="admin">
-                Admin
-              </MenuItem>
-              <MenuItem key="teacher" value="teacher">
-                Teacher
-              </MenuItem>
-              <MenuItem key="student" value="student">
-                Student
-              </MenuItem>
+              <MenuItem key="admin" value="admin">Admin</MenuItem>
+              <MenuItem key="teacher" value="teacher">Teacher</MenuItem>
+              <MenuItem key="student" value="student">Student</MenuItem>
             </Select>
             <FormHelperText>Select your user type</FormHelperText>
           </FormControl>
@@ -206,8 +181,14 @@ const LoginForm = ({ open, onClose }) => {
           <Button onClick={onClose} color="primary">
             Cancel
           </Button>
-          <Button onClick={handleLogin} color="primary" variant="contained">
-            Login
+          <Button
+            onClick={handleLogin}
+            color="primary"
+            variant="contained"
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={20} color="inherit" /> : null}
+          >
+            {loading ? 'Logging in...' : 'Login'}
           </Button>
         </DialogActions>
       </Dialog>

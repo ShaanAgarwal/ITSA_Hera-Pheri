@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Button, List, ListItem, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Button, Box, List, ListItem, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import UploadExcel from './UploadExcel';
 
 const Sidebar = () => {
@@ -34,7 +34,7 @@ const Sidebar = () => {
             <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
                 <DialogTitle>{uploadType.charAt(0).toUpperCase() + uploadType.slice(1)} Upload</DialogTitle>
                 <DialogContent>
-                    <UploadExcel type={uploadType} />
+                    <UploadExcel type={uploadType} onClose={handleClose} />
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={handleClose} color="primary">
