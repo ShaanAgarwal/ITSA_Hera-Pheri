@@ -3,6 +3,7 @@ from flask_pymongo import PyMongo
 from bson import ObjectId
 from flask_cors import CORS
 import json
+from datetime import datetime
 
 app = Flask(__name__)
 CORS(app)
@@ -225,10 +226,14 @@ def upload_assignment(course_id):
     data = request.json
     if not data or 'title' not in data or 'questions' not in data:
         return jsonify({'error': 'Invalid input'}), 400
+    if 'deadline' not in data or 'date' not in data['deadline'] or 'time' not in data['deadline']:
+        return jsonify({'error': 'Deadline date and time are required'}), 400
+    deadline_datetime = f"{data['deadline']['date']}"
     assignment_data = {
         'title': data['title'],
         'questions': data['questions'],
-        'courseId': course_id 
+        'courseId': course_id,
+        'deadline': deadline_datetime 
     }
     result = mongo.db.assignments.insert_one(assignment_data)
     return jsonify({'message': 'Assignment uploaded successfully', 'id': str(result.inserted_id)}), 201
@@ -271,7 +276,7 @@ def save_responses(assignment_id):
     
 @app.route('/assignments/<assignment_id>/status', methods=['GET'])
 def check_assignment_status(assignment_id):
-    user_id = request.args.get('userId')  # Expecting userId as a query parameter
+    user_id = request.args.get('userId')
     if not user_id:
         return jsonify({'error': 'User ID is required'}), 400
     

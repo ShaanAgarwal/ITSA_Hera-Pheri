@@ -17,6 +17,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import SaveIcon from "@mui/icons-material/Save";
 import axios from "axios";
+import { LocalizationProvider, DatePicker, TimePicker } from "@mui/x-date-pickers";
+import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
+import dayjs from "dayjs";
 
 const questionTypes = [
     { label: "Short Answer", value: "short" },
@@ -27,6 +30,8 @@ const questionTypes = [
 const FormBuilder = ({ courseId }) => {
     const [assignmentName, setAssignmentName] = useState("");
     const [questions, setQuestions] = useState([]);
+    const [deadlineDate, setDeadlineDate] = useState(dayjs());
+    const [deadlineTime, setDeadlineTime] = useState(dayjs());
 
     const handleAddQuestion = () => {
         setQuestions([...questions, { id: Date.now(), type: "short", text: "", allowFileUpload: false, options: [], maxMarks: 0, predefinedAnswer: "" }]);
@@ -53,7 +58,7 @@ const FormBuilder = ({ courseId }) => {
     };
 
     const handleExport = () => {
-        const formData = { title: assignmentName, questions };
+        const formData = { title: assignmentName, questions, deadline: { date: deadlineDate, time: deadlineTime } };
         const json = JSON.stringify(formData, null, 2);
         const blob = new Blob([json], { type: "application/json" });
         const href = URL.createObjectURL(blob);
@@ -74,6 +79,10 @@ const FormBuilder = ({ courseId }) => {
                     const importedData = JSON.parse(e.target.result);
                     setAssignmentName(importedData.title);
                     setQuestions(importedData.questions);
+                    if (importedData.deadline) {
+                        setDeadlineDate(dayjs(importedData.deadline.date));
+                        setDeadlineTime(dayjs(importedData.deadline.time));
+                    }
                 } catch (error) {
                     console.error("Error parsing JSON file:", error);
                 }
@@ -83,12 +92,15 @@ const FormBuilder = ({ courseId }) => {
     };
 
     const handleCreateAssignment = async () => {
-        const assignmentData = { title: assignmentName, questions };
+        const assignmentData = { title: assignmentName, questions, deadline: { date: deadlineDate, time: deadlineTime } };
+        console.log(assignmentData);
         try {
             const response = await axios.post(`http://localhost:5000/upload-assignment/${courseId}`, assignmentData);
             console.log('Assignment created:', response.data);
             setAssignmentName('');
             setQuestions([]);
+            setDeadlineDate(dayjs());
+            setDeadlineTime(dayjs());
         } catch (error) {
             console.error('Error creating assignment:', error);
         }
@@ -96,129 +108,146 @@ const FormBuilder = ({ courseId }) => {
 
     return (
         <Container>
-            <Box>
-                <Typography variant="h4" gutterBottom>
-                    Form Builder
-                </Typography>
-                <TextField
-                    label="Assignment Name"
-                    variant="outlined"
-                    fullWidth
-                    value={assignmentName}
-                    onChange={(e) => setAssignmentName(e.target.value)}
-                    margin="normal"
-                />
-                <input type="file" accept=".json" onChange={handleImport} />
-                {questions.map((question, index) => (
-                    <Box key={question.id} mb={3} p={2} border={1} borderRadius={2}>
-                        <Box display="flex" justifyContent="space-between" alignItems="center">
-                            <Typography variant="h6">Question {index + 1}</Typography>
-                            <IconButton color="error" onClick={() => handleDeleteQuestion(question.id)}>
-                                <DeleteIcon />
-                            </IconButton>
-                        </Box>
-                        <TextField
-                            label="Question Text"
-                            variant="outlined"
-                            fullWidth
-                            value={question.text}
-                            onChange={(e) => handleQuestionChange(question.id, "text", e.target.value)}
-                            margin="normal"
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+                <Box>
+                    <Typography variant="h4" gutterBottom>
+                        Form Builder
+                    </Typography>
+                    <TextField
+                        label="Assignment Name"
+                        variant="outlined"
+                        fullWidth
+                        value={assignmentName}
+                        onChange={(e) => setAssignmentName(e.target.value)}
+                        margin="normal"
+                    />
+                    <input type="file" accept=".json" onChange={handleImport} />
+                    <Box marginTop={2}>
+                        <Typography variant="h6">Deadline</Typography>
+                        <DatePicker
+                            label="Deadline Date"
+                            value={deadlineDate}
+                            onChange={(newValue) => setDeadlineDate(newValue)}
+                            renderInput={(params) => <TextField {...params} />}
                         />
-                        <TextField
-                            select
-                            label="Question Type"
-                            value={question.type}
-                            onChange={(e) => handleQuestionChange(question.id, "type", e.target.value)}
-                            fullWidth
-                            margin="normal"
-                        >
-                            {questionTypes.map((option) => (
-                                <MenuItem key={option.value} value={option.value}>
-                                    {option.label}
-                                </MenuItem>
-                            ))}
-                        </TextField>
-                        <TextField
-                            label="Maximum Marks"
-                            variant="outlined"
-                            type="number"
-                            value={question.maxMarks}
-                            onChange={(e) => handleQuestionChange(question.id, "maxMarks", Number(e.target.value))}
-                            fullWidth
-                            margin="normal"
+                        <TimePicker
+                            label="Deadline Time"
+                            value={deadlineTime}
+                            onChange={(newValue) => setDeadlineTime(newValue)}
+                            renderInput={(params) => <TextField {...params} />}
                         />
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    checked={question.allowFileUpload}
-                                    onChange={(e) => handleQuestionChange(question.id, "allowFileUpload", e.target.checked)}
-                                />
-                            }
-                            label="Allow file upload"
-                        />
-                        {question.type === "mcq" && (
-                            <>
-                                <TextField
-                                    label="Predefined Answer"
-                                    variant="outlined"
-                                    value={question.predefinedAnswer}
-                                    onChange={(e) => handleQuestionChange(question.id, "predefinedAnswer", e.target.value)}
-                                    fullWidth
-                                    margin="normal"
-                                />
-                                <Box mt={2}>
-                                    <Typography variant="subtitle1">Options:</Typography>
-                                    <List>
-                                        {question.options.map((option, idx) => (
-                                            <ListItem key={idx}>
-                                                <TextField
-                                                    label={`Option ${idx + 1}`}
-                                                    variant="outlined"
-                                                    value={option}
-                                                    onChange={(e) => handleOptionChange(question.id, idx, e.target.value)}
-                                                    fullWidth
-                                                />
-                                                <ListItemSecondaryAction>
-                                                    <IconButton edge="end" color="error" onClick={() => handleDeleteOption(question.id, idx)}>
-                                                        <DeleteIcon />
-                                                    </IconButton>
-                                                </ListItemSecondaryAction>
-                                            </ListItem>
-                                        ))}
-                                    </List>
-                                    <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleAddOption(question.id)}>
-                                        Add Option
-                                    </Button>
-                                </Box>
-                            </>
-                        )}
                     </Box>
-                ))}
-                <Button variant="contained" onClick={handleAddQuestion}>
-                    Add Question
-                </Button>
-                <Box mt={2}>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<SaveIcon />}
-                        onClick={handleCreateAssignment}
-                    >
-                        Create Assignment
+                    {questions.map((question, index) => (
+                        <Box key={question.id} mb={3} p={2} border={1} borderRadius={2}>
+                            <Box display="flex" justifyContent="space-between" alignItems="center">
+                                <Typography variant="h6">Question {index + 1}</Typography>
+                                <IconButton color="error" onClick={() => handleDeleteQuestion(question.id)}>
+                                    <DeleteIcon />
+                                </IconButton>
+                            </Box>
+                            <TextField
+                                label="Question Text"
+                                variant="outlined"
+                                fullWidth
+                                value={question.text}
+                                onChange={(e) => handleQuestionChange(question.id, "text", e.target.value)}
+                                margin="normal"
+                            />
+                            <TextField
+                                select
+                                label="Question Type"
+                                value={question.type}
+                                onChange={(e) => handleQuestionChange(question.id, "type", e.target.value)}
+                                fullWidth
+                                margin="normal"
+                            >
+                                {questionTypes.map((option) => (
+                                    <MenuItem key={option.value} value={option.value}>
+                                        {option.label}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                            <TextField
+                                label="Maximum Marks"
+                                variant="outlined"
+                                type="number"
+                                value={question.maxMarks}
+                                onChange={(e) => handleQuestionChange(question.id, "maxMarks", Number(e.target.value))}
+                                fullWidth
+                                margin="normal"
+                            />
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={question.allowFileUpload}
+                                        onChange={(e) => handleQuestionChange(question.id, "allowFileUpload", e.target.checked)}
+                                    />
+                                }
+                                label="Allow file upload"
+                            />
+                            {question.type === "mcq" && (
+                                <>
+                                    <TextField
+                                        label="Predefined Answer"
+                                        variant="outlined"
+                                        value={question.predefinedAnswer}
+                                        onChange={(e) => handleQuestionChange(question.id, "predefinedAnswer", e.target.value)}
+                                        fullWidth
+                                        margin="normal"
+                                    />
+                                    <Box mt={2}>
+                                        <Typography variant="subtitle1">Options:</Typography>
+                                        <List>
+                                            {question.options.map((option, idx) => (
+                                                <ListItem key={idx}>
+                                                    <TextField
+                                                        label={`Option ${idx + 1}`}
+                                                        variant="outlined"
+                                                        value={option}
+                                                        onChange={(e) => handleOptionChange(question.id, idx, e.target.value)}
+                                                        fullWidth
+                                                    />
+                                                    <ListItemSecondaryAction>
+                                                        <IconButton edge="end" color="error" onClick={() => handleDeleteOption(question.id, idx)}>
+                                                            <DeleteIcon />
+                                                        </IconButton>
+                                                    </ListItemSecondaryAction>
+                                                </ListItem>
+                                            ))}
+                                        </List>
+                                        <Button variant="outlined" startIcon={<AddIcon />} onClick={() => handleAddOption(question.id)}>
+                                            Add Option
+                                        </Button>
+                                    </Box>
+                                </>
+                            )}
+                        </Box>
+                    ))}
+                    <Button variant="contained" onClick={handleAddQuestion}>
+                        Add Question
                     </Button>
+                    <Box mt={2}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<SaveIcon />}
+                            onClick={handleCreateAssignment}
+                        >
+                            Create Assignment
+                        </Button>
+                    </Box>
+                    <Box mt={4}>
+                        <Button
+                            variant="contained"
+                            color="primary"
+                            startIcon={<SaveIcon />}
+                            onClick={handleExport}
+                        >
+                            Export Form as JSON
+                        </Button>
+                    </Box>
                 </Box>
-                <Box mt={4}>
-                    <Button
-                        variant="contained"
-                        color="primary"
-                        startIcon={<SaveIcon />}
-                        onClick={handleExport}
-                    >
-                        Export Form as JSON
-                    </Button>
-                </Box>
-            </Box>
+            </LocalizationProvider>
         </Container>
     );
 };
