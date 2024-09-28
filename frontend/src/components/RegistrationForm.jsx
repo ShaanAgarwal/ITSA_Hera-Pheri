@@ -29,18 +29,15 @@ const RegistrationForm = ({ open, onClose }) => {
     try {
       const response = await axios.post('http://localhost:5000/register', registerData);
 
-      // Check if registration was successful
       if (response.status === 201) {
         setSnackbarMessage('Institute registered successfully!');
         setSnackbarSeverity('success');
         setSnackbarOpen(true);
 
-        // Clear form fields
         setInstituteName('');
         setAdminUsername('');
         setAdminPassword('');
 
-        // Close the dialog after registration
         onClose();
       }
     } catch (error) {
@@ -99,12 +96,11 @@ const RegistrationForm = ({ open, onClose }) => {
         </DialogActions>
       </Dialog>
 
-      {/* Snackbar for notifications */}
       <Snackbar
         open={snackbarOpen}
         autoHideDuration={6000}
         onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }} // Position at the top center
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
       >
         <Alert onClose={handleSnackbarClose} severity={snackbarSeverity} sx={{ width: '100%' }}>
           {snackbarMessage}

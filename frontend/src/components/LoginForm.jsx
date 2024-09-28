@@ -15,7 +15,7 @@ import {
   FormHelperText,
 } from '@mui/material';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 
 const LoginForm = ({ open, onClose }) => {
   const [username, setUsername] = useState('');
@@ -27,7 +27,7 @@ const LoginForm = ({ open, onClose }) => {
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
   
-  const navigate = useNavigate(); // Initialize useNavigate
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchInstitutes = async () => {
@@ -91,14 +91,12 @@ const LoginForm = ({ open, onClose }) => {
         setSnackbarMessage('Login successful!');
         setSnackbarSeverity('success');
         
-        // Store user ID and other info in local storage
         localStorage.setItem('userId', response.data.user.id);
         localStorage.setItem('username', response.data.user.username);
         localStorage.setItem('userType', response.data.user.userType);
 
-        // Navigate to /admindashboard if the user type is admin
         if (userType === 'admin') {
-          navigate('/admindashboard'); // Navigate to admin dashboard
+          navigate('/admindashboard');
         } else if(userType == 'teacher') {
             navigate('/teacherdashboard');
         } else {

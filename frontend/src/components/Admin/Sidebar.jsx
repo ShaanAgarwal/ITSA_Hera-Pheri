@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Button, List, ListItem, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
-import UploadExcel from './UploadExcel'; // Assuming this is your upload component
+import UploadExcel from './UploadExcel';
 
 const Sidebar = () => {
     const [open, setOpen] = useState(false);

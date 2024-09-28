@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { AppBar, Toolbar, Typography, Button, Box } from '@mui/material';
+import { Typography, Box } from '@mui/material';
 import Navbar from '../components/Admin/Navbar';
 import Sidebar from '../components/Admin/Sidebar';
 import axios from 'axios';
@@ -22,8 +22,8 @@ const AdminDashboard = () => {
     }, [userId]);
 
     const handleLogout = () => {
-        localStorage.clear(); // Clear local storage
-        window.location.href = '/'; // Redirect to homepage
+        localStorage.clear();
+        window.location.href = '/';
     };
 
     return (
@@ -33,7 +33,6 @@ const AdminDashboard = () => {
                 <Sidebar />
                 <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
                     <Typography variant="h4">Welcome to the Admin Dashboard</Typography>
-                    {/* Other dashboard content can go here */}
                 </Box>
             </Box>
         </Box>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom'; // Import Link for navigation
+import { Link } from 'react-router-dom';
 import Navbar from '../components/Teacher/Navbar';
 import Sidebar from '../components/Teacher/Sidebar';
 import AddCourse from '../components/Teacher/AddCourse';

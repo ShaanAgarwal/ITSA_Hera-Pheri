@@ -1,4 +1,3 @@
-// HomePage.jsx
 import React, { useEffect, useState } from 'react';
 import {
   AppBar,
@@ -125,7 +124,7 @@ const HomePage = () => {
                   <Button
                     color="inherit"
                     variant="contained"
-                    onClick={() => setRegisterOpen(true)} // Open the registration dialog
+                    onClick={() => setRegisterOpen(true)}
                     sx={{
                       borderRadius: '20px',
                       backgroundColor: '#FF5722',
@@ -188,7 +187,6 @@ const HomePage = () => {
               </Grid>
             </Grid>
 
-            {/* Features Section */}
             <Box sx={{ marginTop: 4 }}>
               <Typography variant="h4" gutterBottom align="center" sx={{ fontWeight: 'bold', color: '#FF6F61' }}>
                 Features
@@ -238,7 +236,6 @@ const HomePage = () => {
             </Box>
           </Container>
 
-          {/* Registration Form Dialog */}
           <RegistrationForm open={registerOpen} onClose={() => setRegisterOpen(false)} />
           <LoginForm open={loginOpen} onClose={() => setLoginOpen(false)} />
         </>

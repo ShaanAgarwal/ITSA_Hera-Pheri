@@ -22,10 +22,8 @@ const UploadExcel = ({ type }) => {
             const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
             const jsonData = XLSX.utils.sheet_to_json(firstSheet);
 
-            // Retrieve instituteId from local storage
             const instituteId = localStorage.getItem('userId');
 
-            // Map jsonData to include instituteId
             const dataWithInstituteId = jsonData.map(entry => ({
                 ...entry,
                 instituteId: instituteId,

@@ -24,9 +24,9 @@ const Alert = React.forwardRef(function Alert(props, ref) {
 const CourseDetails = () => {
     const { courseId } = useParams();
     const [courseDetails, setCourseDetails] = useState(null);
-    const [assignments, setAssignments] = useState([]); // State for assignments
+    const [assignments, setAssignments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [openFormBuilder, setOpenFormBuilder] = useState(false); // State to control FormBuilder visibility
+    const [openFormBuilder, setOpenFormBuilder] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
 
@@ -45,14 +45,14 @@ const CourseDetails = () => {
         const fetchAssignments = async () => {
             try {
                 const response = await axios.get(`http://localhost:5000/course/${courseId}/assignments`);
-                setAssignments(response.data); // Set the fetched assignments
+                setAssignments(response.data);
             } catch (error) {
                 console.error('Error fetching assignments:', error);
             }
         };
 
         fetchCourseDetails();
-        fetchAssignments(); // Fetch assignments on component mount
+        fetchAssignments();
     }, [courseId]);
 
     const handleOpenFormBuilder = () => {
@@ -64,7 +64,7 @@ const CourseDetails = () => {
     };
 
     const handleAssignmentCreated = (assignment) => {
-        setAssignments((prev) => [...prev, assignment]); // Add new assignment to the list
+        setAssignments((prev) => [...prev, assignment]);
         setSnackbarMessage('Assignment created successfully!');
         setSnackbarOpen(true);
         handleCloseFormBuilder();
@@ -87,7 +87,6 @@ const CourseDetails = () => {
                 Add Assignment
             </Button>
 
-            {/* Display Assignments */}
             <Box mt={4}>
                 <Typography variant="h5">Assignments</Typography>
                 <List>
@@ -99,7 +98,6 @@ const CourseDetails = () => {
                 </List>
             </Box>
 
-            {/* Dialog for FormBuilder */}
             <Dialog open={openFormBuilder} onClose={handleCloseFormBuilder} fullWidth maxWidth="md">
                 <DialogTitle>Add Assignment</DialogTitle>
                 <DialogContent>
@@ -110,7 +108,6 @@ const CourseDetails = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Snackbar for feedback */}
             <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
                 <Alert onClose={() => setSnackbarOpen(false)} severity="success">
                     {snackbarMessage}

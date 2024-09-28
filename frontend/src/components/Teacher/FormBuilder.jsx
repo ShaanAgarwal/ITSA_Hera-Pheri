@@ -24,7 +24,7 @@ const questionTypes = [
     { label: "Multiple Choice", value: "mcq" },
 ];
 
-const FormBuilder = ({ courseId }) => { // Accept courseId as a prop
+const FormBuilder = ({ courseId }) => {
     const [assignmentName, setAssignmentName] = useState("");
     const [questions, setQuestions] = useState([]);
 
@@ -87,7 +87,6 @@ const FormBuilder = ({ courseId }) => { // Accept courseId as a prop
         try {
             const response = await axios.post(`http://localhost:5000/upload-assignment/${courseId}`, assignmentData);
             console.log('Assignment created:', response.data);
-            // Reset the form after creation
             setAssignmentName('');
             setQuestions([]);
         } catch (error) {

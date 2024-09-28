@@ -92,9 +92,8 @@ const StudentDashboard = () => {
                 coursePassword: enrollPassword  
             });
             if (response.status === 200) {
-                setEnrollmentSuccess(true); // Set success state
+                setEnrollmentSuccess(true);
                 handleClose();
-                // Optionally, refresh the enrolled courses list
                 const coursesResponse = await axios.get(`http://localhost:5000/student/${userId}/enrolledCourses`);
                 setEnrolledCourses(coursesResponse.data);
             }
@@ -149,7 +148,6 @@ const StudentDashboard = () => {
                 </List>
             </Box>
 
-            {/* Courses Dialog */}
             <Dialog open={Boolean(selectedTeacher)} onClose={handleClose}>
                 <DialogTitle>Courses Taught by Teacher</DialogTitle>
                 <DialogContent>
@@ -168,7 +166,6 @@ const StudentDashboard = () => {
                 </DialogContent>
             </Dialog>
 
-            {/* Enrollment Dialog */}
             <Dialog open={Boolean(selectedCourseId)} onClose={() => setSelectedCourseId(null)}>
                 <DialogTitle>Enroll in Course</DialogTitle>
                 <DialogContent>
@@ -189,7 +186,6 @@ const StudentDashboard = () => {
                 </DialogActions>
             </Dialog>
 
-            {/* Snackbar for success message */}
             <Snackbar open={enrollmentSuccess} autoHideDuration={6000} onClose={() => setEnrollmentSuccess(false)}>
                 <Alert onClose={() => setEnrollmentSuccess(false)} severity="success">
                     Enrollment successful!
