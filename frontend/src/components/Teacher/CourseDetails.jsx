@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import { Box, Typography, Button, Snackbar, CircularProgress, Grid } from '@mui/material';
+import { Box, Typography, Button, Snackbar, CircularProgress, Grid, Card, CardContent } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
 import AssignmentList from './AssignmentList';
 import AddAssignmentDialog from './AddAssignmentDialog';
@@ -68,20 +68,24 @@ const CourseDetails = () => {
 
     return (
         <Box sx={{ padding: 3, backgroundColor: '#f9f9f9', borderRadius: 2, boxShadow: 2 }}>
-            <Typography variant="h4" gutterBottom>{courseDetails.courseName}</Typography>
-            <Typography variant="h6" color="text.secondary">Description:</Typography>
-            <Typography variant="body1" sx={{ marginBottom: 2 }}>{courseDetails.courseDescription}</Typography>
-            <Typography variant="body2" color="text.secondary" sx={{ marginBottom: 2 }}>
-                <strong>Password:</strong> {courseDetails.coursePassword}
-            </Typography>
-            <Button 
-                variant="contained" 
-                color="primary" 
-                onClick={handleOpenDialog} 
-                sx={{ mb: 2 }}
-            >
-                Add Assignment
-            </Button>
+            <Card sx={{ mb: 3 }}>
+                <CardContent>
+                    <Typography variant="h4" gutterBottom>{courseDetails.courseName}</Typography>
+                    <Typography variant="h6" color="text.secondary">Description:</Typography>
+                    <Typography variant="body1" sx={{ marginBottom: 2 }}>{courseDetails.courseDescription}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ marginBottom: 2 }}>
+                        <strong>Password:</strong> {courseDetails.coursePassword}
+                    </Typography>
+                    <Button 
+                        variant="contained" 
+                        color="primary" 
+                        onClick={handleOpenDialog} 
+                        sx={{ mb: 2 }}
+                    >
+                        Add Assignment
+                    </Button>
+                </CardContent>
+            </Card>
 
             <AssignmentList assignments={assignments} />
 

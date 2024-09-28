@@ -9,7 +9,11 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Button
+    Button,
+    Card,
+    CardContent,
+    CircularProgress,
+    Box,
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
 import FormRenderer from './FormRenderer';
@@ -64,19 +68,46 @@ const AssignmentDetails = () => {
         setFilePaths({});
     };
 
-    if (!students.length) return <div>Loading...</div>;
+    if (!students.length) {
+        return (
+            <Container>
+                <Box display="flex" justifyContent="center" alignItems="center" height="100vh">
+                    <CircularProgress />
+                </Box>
+            </Container>
+        );
+    }
 
     return (
         <Container>
-            <Typography variant="h6">Students</Typography>
+            <Typography variant="h4" gutterBottom align="center">Students</Typography>
             <List>
                 {students.map(student => (
                     <ListItem
                         key={student._id}
-                        style={{ color: student.hasAttempted ? 'green' : 'red' }}
+                        style={{ cursor: 'pointer' }}
                         onClick={() => handleOpen(student)}
                     >
-                        {student.studentName}
+                        <Card
+                            variant="outlined"
+                            style={{
+                                width: '100%',
+                                margin: '8px 0',
+                                backgroundColor: student.hasAttempted ? '#e8f5e9' : '#ffebee',
+                                transition: 'transform 0.2s',
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                        >
+                            <CardContent>
+                                <Typography variant="h6" style={{ color: student.hasAttempted ? 'green' : 'red' }}>
+                                    {student.studentName}
+                                </Typography>
+                                <Typography variant="body2" color="textSecondary">
+                                    {student.hasAttempted ? 'Attempted' : 'Not Attempted'}
+                                </Typography>
+                            </CardContent>
+                        </Card>
                     </ListItem>
                 ))}
             </List>
