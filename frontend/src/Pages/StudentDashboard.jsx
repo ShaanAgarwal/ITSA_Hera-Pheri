@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Student/Navbar';
 import axios from 'axios';
-import { Box, Typography, Snackbar, Alert } from '@mui/material';
-import TeacherList from '../components/Student/TeacherList';
+import { Typography, Snackbar, Alert, Grid, Paper, Divider } from '@mui/material';
 import EnrolledCourses from '../components/Student/EnrolledCourses';
 import CourseDialog from '../components/Student/CourseDialog';
 import EnrollDialog from '../components/Student/EnrollDialog';
+import TeacherList from '../components/Student/TeacherList';
 
 const StudentDashboard = () => {
     const [instituteName, setInstituteName] = useState('');
@@ -35,7 +35,7 @@ const StudentDashboard = () => {
                 console.error('Error fetching student details:', error);
             } finally {
                 setLoading(false);
-            };
+            }
         };
         fetchStudentDetails();
     }, [userId]);
@@ -52,7 +52,7 @@ const StudentDashboard = () => {
             setSelectedTeacher(teacherId);
         } catch (error) {
             console.error('Error fetching courses:', error);
-        };
+        }
     };
 
     const handleClose = () => {
@@ -70,7 +70,7 @@ const StudentDashboard = () => {
         if (!enrollPassword || !selectedCourseId) {
             alert("Please enter the password and select a course.");
             return;
-        };
+        }
         try {
             const response = await axios.put(`http://localhost:5000/courses/enroll/${selectedCourseId}`, { 
                 userId, 
@@ -81,16 +81,16 @@ const StudentDashboard = () => {
                 handleClose();
                 const coursesResponse = await axios.get(`http://localhost:5000/student/${userId}/enrolledCourses`);
                 setEnrolledCourses(coursesResponse.data);
-            };
+            }
         } catch (error) {
             console.error('Error enrolling in course:', error);
             alert(error.response?.data?.error || 'An error occurred while enrolling in the course.');
-        };
+        }
     };
 
     if (loading) {
         return <div>Loading...</div>;
-    };
+    }
 
     return (
         <div>
@@ -99,13 +99,26 @@ const StudentDashboard = () => {
                 studentName={studentName} 
                 onLogout={handleLogout} 
             />
-            <Box sx={{ padding: 2 }}>
-                <Typography variant="h4">Welcome to the Student Dashboard</Typography>
-                <Typography variant="h5">Teachers in your Institute:</Typography>
-                <TeacherList teachers={teachers} onTeacherClick={handleTeacherClick} />
-                <Typography variant="h5" sx={{ marginTop: 3 }}>Enrolled Courses:</Typography>
-                <EnrolledCourses enrolledCourses={enrolledCourses} />
-            </Box>
+            <Grid container spacing={2} sx={{ padding: 2, height: 'calc(100vh - 64px)' }}>
+                <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column' }}>
+                    <Paper elevation={3} sx={{ padding: 2, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>Enrolled Courses</Typography>
+                        <Divider sx={{ marginY: 1 }} />
+                        <div style={{ flex: 1, overflowY: 'auto' }}>
+                            <EnrolledCourses enrolledCourses={enrolledCourses} />
+                        </div>
+                    </Paper>
+                </Grid>
+                <Grid item xs={12} md={8} sx={{ display: 'flex', flexDirection: 'column' }}>
+                    <Paper elevation={3} sx={{ padding: 2, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>Teachers in Your Institute</Typography>
+                        <Divider sx={{ marginY: 1 }} />
+                        <div style={{ flex: 1, overflowY: 'auto' }}>
+                            <TeacherList teachers={teachers} onTeacherClick={handleTeacherClick} />
+                        </div>
+                    </Paper>
+                </Grid>
+            </Grid>
             <CourseDialog open={Boolean(selectedTeacher)} onClose={handleClose} courses={courses} onEnrollClick={handleEnrollClick} />
             <EnrollDialog 
                 open={Boolean(selectedCourseId)} 
