@@ -87,10 +87,9 @@ def upload_teacher():
 
     teachers_data = []
     for entry in data:
-        # Check for required fields
         if all(k in entry for k in ['teacherName', 'teacherUsername', 'teacherPassword', 'instituteId']):
             teachers_data.append({
-                'instituteId': entry['instituteId'],  # Directly take it from the entry
+                'instituteId': entry['instituteId'],
                 'teacherName': entry['teacherName'],
                 'teacherUsername': entry['teacherUsername'],
                 'teacherPassword': entry['teacherPassword'],
@@ -115,10 +114,9 @@ def upload_student():
 
     students_data = []
     for entry in data:
-        # Check for required fields
         if all(k in entry for k in ['studentName', 'studentUsername', 'studentPassword', 'instituteId']):
             students_data.append({
-                'instituteId': entry['instituteId'],  # Directly take it from the entry
+                'instituteId': entry['instituteId'],
                 'studentName': entry['studentName'],
                 'studentUsername': entry['studentUsername'],
                 'studentPassword': entry['studentPassword'],
@@ -133,6 +131,47 @@ def upload_student():
 
     return jsonify({'error': 'No valid student data found'}), 400
 
+@app.route('/teacher/<user_id>', methods=['GET'])
+def get_teacher_details(user_id):
+    teacher = mongo.db.teachers.find_one({'_id': ObjectId(user_id)})
+    
+    if teacher:
+        return jsonify({
+            'id': str(teacher['_id']),
+            'teacherName': teacher['teacherName'],
+            'instituteId': teacher['instituteId']
+        }), 200
+
+    return jsonify({'error': 'Teacher not found'}), 404
+
+@app.route('/institutes/<institute_id>', methods=['GET'])
+def get_institute_details(institute_id):
+    institute = mongo.db.institutes.find_one({'_id': ObjectId(institute_id)})
+    
+    if institute:
+        return jsonify({
+            'instituteName': institute['instituteName']
+        }), 200
+    
+    return jsonify({'error': 'Institute not found'}), 404
+
+@app.route('/add-course', methods=['POST'])
+def add_course():
+    data = request.json
+    course_data = {
+        'courseName': data['courseName'],
+        'courseDescription': data['courseDescription'],
+        'coursePassword': data['coursePassword'],
+        'teacherId': data['teacherId']
+    }
+    mongo.db.courses.insert_one(course_data)
+    return jsonify({'message': 'Course added successfully'}), 201
+
+@app.route('/courses/<teacher_id>', methods=['GET'])
+def get_courses(teacher_id):
+    courses = mongo.db.courses.find({'teacherId': teacher_id})
+    course_list = [{'id': str(course['_id']), 'courseName': course['courseName']} for course in courses]
+    return jsonify(course_list), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
