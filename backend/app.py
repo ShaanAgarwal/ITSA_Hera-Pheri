@@ -15,7 +15,6 @@ def register_institute():
     data = request.json
     if not data or 'instituteName' not in data or 'adminUsername' not in data or 'adminPassword' not in data:
         return jsonify({'error': 'Invalid input'}), 400
-
     institute_data = {
         'instituteName': data['instituteName'],
         'adminUsername': data['adminUsername'],
@@ -31,12 +30,9 @@ def login():
     username = data.get('username')
     password = data.get('password')
     userType = data.get('userType')
-
     if not username or not password or not userType:
         return jsonify({'error': 'Invalid input'}), 400
-
     user = None
-
     if userType == 'admin':
         user = mongo.db.institutes.find_one({'adminUsername': username, 'adminPassword': password})
     elif userType == 'teacher':
@@ -45,7 +41,6 @@ def login():
         user = mongo.db.students.find_one({'studentUsername': username, 'studentPassword': password})
     else:
         return jsonify({'error': 'Invalid user type'}), 400
-
     if user:
         user_id = str(user['_id'])
         return jsonify({
@@ -56,7 +51,6 @@ def login():
                 'userType': userType
             }
         }), 200
-
     return jsonify({'error': 'Invalid credentials'}), 401
 
 @app.route('/institutes', methods=['GET'])
@@ -68,23 +62,19 @@ def get_institutes():
 @app.route('/admin/<user_id>', methods=['GET'])
 def get_admin_details(user_id):
     admin = mongo.db.institutes.find_one({'_id': ObjectId(user_id)})
-    
     if admin:
         return jsonify({
             'id': str(admin['_id']),
             'instituteName': admin['instituteName'],
             'adminUsername': admin['adminUsername']
         }), 200
-    
     return jsonify({'error': 'Admin not found'}), 404
 
 @app.route('/upload-teacher', methods=['POST'])
 def upload_teacher():
     data = request.json
-
     if not data:
         return jsonify({'error': 'No data provided'}), 400
-
     teachers_data = []
     for entry in data:
         if all(k in entry for k in ['teacherName', 'teacherUsername', 'teacherPassword', 'instituteId']):
@@ -97,21 +87,17 @@ def upload_teacher():
         else:
             missing_fields = [k for k in ['teacherName', 'teacherUsername', 'teacherPassword', 'instituteId'] if k not in entry]
             return jsonify({'error': 'Invalid data format for teachers', 'missing_fields': missing_fields}), 400
-
     if teachers_data:
         mongo.db.teachers.insert_many(teachers_data)
         return jsonify({'message': 'Teachers added successfully'}), 201
-
     return jsonify({'error': 'No valid teacher data found'}), 400
 
 
 @app.route('/upload-student', methods=['POST'])
 def upload_student():
     data = request.json
-
     if not data:
         return jsonify({'error': 'No data provided'}), 400
-
     students_data = []
     for entry in data:
         if all(k in entry for k in ['studentName', 'studentUsername', 'studentPassword', 'instituteId']):
@@ -124,35 +110,29 @@ def upload_student():
         else:
             missing_fields = [k for k in ['studentName', 'studentUsername', 'studentPassword', 'instituteId'] if k not in entry]
             return jsonify({'error': 'Invalid data format for students', 'missing_fields': missing_fields}), 400
-
     if students_data:
         mongo.db.students.insert_many(students_data)
         return jsonify({'message': 'Students added successfully'}), 201
-
     return jsonify({'error': 'No valid student data found'}), 400
 
 @app.route('/teacher/<user_id>', methods=['GET'])
 def get_teacher_details(user_id):
     teacher = mongo.db.teachers.find_one({'_id': ObjectId(user_id)})
-    
     if teacher:
         return jsonify({
             'id': str(teacher['_id']),
             'teacherName': teacher['teacherName'],
             'instituteId': teacher['instituteId']
         }), 200
-
     return jsonify({'error': 'Teacher not found'}), 404
 
 @app.route('/institutes/<institute_id>', methods=['GET'])
 def get_institute_details(institute_id):
     institute = mongo.db.institutes.find_one({'_id': ObjectId(institute_id)})
-    
     if institute:
         return jsonify({
             'instituteName': institute['instituteName']
         }), 200
-    
     return jsonify({'error': 'Institute not found'}), 404
 
 @app.route('/add-course', methods=['POST'])
@@ -176,7 +156,6 @@ def get_courses(teacher_id):
 @app.route('/course/<course_id>', methods=['GET'])
 def get_course_details(course_id):
     course = mongo.db.courses.find_one({'_id': ObjectId(course_id)})
-    
     if course:
         return jsonify({
             'id': str(course['_id']),
@@ -184,7 +163,6 @@ def get_course_details(course_id):
             'courseDescription': course['courseDescription'],
             'coursePassword': course['coursePassword']
         }), 200
-    
     return jsonify({'error': 'Course not found'}), 404
 
 @app.route('/student/<user_id>', methods=['GET'])
@@ -215,66 +193,43 @@ def enroll_in_course(course_id):
     data = request.json
     user_id = data.get('userId')
     course_password = data.get('coursePassword')
-
-    # Validate input
     if not user_id or not course_password:
         return jsonify({'error': 'Invalid input'}), 400
-
-    # Find the course
     course = mongo.db.courses.find_one({'_id': ObjectId(course_id)})
     if not course:
         return jsonify({'error': 'Course not found'}), 404
-
-    # Check if the provided password matches
     if course['coursePassword'] != course_password:
         return jsonify({'error': 'Incorrect password'}), 401
-
-    # Update the course with the new student
     if user_id not in course.get('enrolledStudents', []):
         mongo.db.courses.update_one({'_id': ObjectId(course_id)}, {'$push': {'enrolledStudents': user_id}})
-    
-    # Update the student with the new course
     student = mongo.db.students.find_one({'_id': ObjectId(user_id)})
     if student:
         if course_id not in student.get('courseEnrollments', []):
             mongo.db.students.update_one({'_id': ObjectId(user_id)}, {'$push': {'courseEnrollments': course_id}})
-    
     return jsonify({'message': 'Enrollment successful'}), 200
 
 @app.route('/student/<user_id>/enrolledCourses', methods=['GET'])
 def get_enrolled_courses(user_id):
-    # Find the student by user_id
     student = mongo.db.students.find_one({'_id': ObjectId(user_id)})
-    
     if not student:
         return jsonify({'error': 'Student not found'}), 404
-
-    # Get the list of enrolled course IDs
     enrolled_course_ids = student.get('courseEnrollments', [])
-
     if not enrolled_course_ids:
-        return jsonify([]), 200  # No courses enrolled
-
-    # Fetch course details for the enrolled courses
+        return jsonify([]), 200
     courses = mongo.db.courses.find({'_id': {'$in': [ObjectId(course_id) for course_id in enrolled_course_ids]}})
     course_list = [{'id': str(course['_id']), 'courseName': course['courseName'], 'courseDescription': course['courseDescription']} for course in courses]
-
     return jsonify(course_list), 200
 
 @app.route('/upload-assignment/<course_id>', methods=['POST'])
 def upload_assignment(course_id):
     data = request.json
-    
     if not data or 'title' not in data or 'questions' not in data:
         return jsonify({'error': 'Invalid input'}), 400
-
-    # Construct assignment data with a reference to the course
     assignment_data = {
         'title': data['title'],
         'questions': data['questions'],
-        'courseId': course_id  # Reference to the course
+        'courseId': course_id 
     }
-
     result = mongo.db.assignments.insert_one(assignment_data)
     return jsonify({'message': 'Assignment uploaded successfully', 'id': str(result.inserted_id)}), 201
 
@@ -287,7 +242,6 @@ def get_assignments_by_course(course_id):
 @app.route('/assignment/<assignment_id>', methods=['GET'])
 def get_assignment_details(assignment_id):
     assignment = mongo.db.assignments.find_one({'_id': ObjectId(assignment_id)})
-    
     if assignment:
         return jsonify({
             'id': str(assignment['_id']),
@@ -295,27 +249,7 @@ def get_assignment_details(assignment_id):
             'questions': assignment['questions'],
             'courseId': assignment['courseId']
         }), 200
-    
     return jsonify({'error': 'Assignment not found'}), 404
-
-@app.route('/assignment/<assignment_id>', methods=['PUT'])
-def update_assignment(assignment_id):
-    data = request.json
-
-    if not data or 'title' not in data or 'questions' not in data:
-        return jsonify({'error': 'Invalid input'}), 400
-
-    updated_assignment = {
-        'title': data['title'],
-        'questions': data['questions'],
-    }
-
-    result = mongo.db.assignments.update_one({'_id': ObjectId(assignment_id)}, {'$set': updated_assignment})
-
-    if result.matched_count == 0:
-        return jsonify({'error': 'Assignment not found'}), 404
-
-    return jsonify({'message': 'Assignment updated successfully'}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
