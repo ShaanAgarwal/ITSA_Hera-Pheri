@@ -3,7 +3,6 @@ from flask_pymongo import PyMongo
 from bson import ObjectId
 from flask_cors import CORS
 import json
-from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
 
@@ -13,28 +12,17 @@ CORS(app)
 app.config["MONGO_URI"] = "mongodb://localhost:27017/samarpan"
 mongo = PyMongo(app)
 
-app.config['UPLOAD_FOLDER'] = 'uploads'  # Base upload folder
-app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'jpg', 'jpeg', 'png', 'json'}  # Adjust as needed
+app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['ALLOWED_EXTENSIONS'] = {'pdf', 'jpg', 'jpeg', 'png', 'json'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in app.config['ALLOWED_EXTENSIONS']
 
 @app.route('/uploads/<path:subpath>', methods=['GET'])
 def serve_file(subpath):
-    # Log the requested file path
-    print(f"Received request to serve file: {subpath}")
-    
-    # Construct the full path
     full_path = os.path.join(app.config['UPLOAD_FOLDER'], subpath)
-    
-    # Check if the file exists
     if not os.path.isfile(full_path):
-        print(f"File not found: {full_path}")
         return jsonify({'error': 'File not found'}), 404
-
-    # Log the successful file serving
-    print(f"Serving file: {full_path}")
-    
     return send_from_directory(app.config['UPLOAD_FOLDER'], subpath)
 
 @app.route('/register', methods=['POST'])
@@ -252,58 +240,43 @@ def upload_assignment(course_id):
     data = request.form
     if not data or 'assignment' not in data:
         return jsonify({'error': 'Invalid input'}), 400
-
     try:
         assignment = json.loads(data['assignment'])
     except json.JSONDecodeError:
         return jsonify({'error': 'Invalid JSON format for assignment'}), 400
-
-    # Validate required fields in the assignment
     required_fields = ['title', 'questions', 'deadline']
     for field in required_fields:
         if field not in assignment:
             return jsonify({'error': f'{field.capitalize()} is required'}), 400
-    
     if 'date' not in assignment['deadline'] or 'time' not in assignment['deadline']:
         return jsonify({'error': 'Deadline date and time are required'}), 400
-
     deadline_datetime = f"{assignment['deadline']['date']} {assignment['deadline']['time']}"
-
-    # Prepare directory structure for saving files
     course_folder = os.path.join(app.config['UPLOAD_FOLDER'], course_id)
     assignment_folder = os.path.join(course_folder, assignment['title'])
     os.makedirs(assignment_folder, exist_ok=True)
-
-    # Initialize a dictionary to hold file paths for each question
     file_paths = {str(question['id']): [] for question in assignment['questions']}
-    
-    # Handle file uploads
     files = request.files
     for question in assignment['questions']:
-        question_id = str(question['id'])  # Ensure question_id is a string
+        question_id = str(question['id'])  
         file_key = f'files[{question_id}]'
-        
         if file_key in files:
             uploaded_files = request.files.getlist(file_key)
             for file in uploaded_files:
                 if file and allowed_file(file.filename):
                     filename = secure_filename(file.filename)
                     file_path = os.path.join(assignment_folder, question_id, filename)
-                    os.makedirs(os.path.dirname(file_path), exist_ok=True)  # Create question ID folder
+                    os.makedirs(os.path.dirname(file_path), exist_ok=True)  
                     file.save(file_path)
                     file_paths[question_id].append(file_path)
                 else:
                     return jsonify({'error': f'Invalid file type for question ID {question_id} or no file uploaded'}), 400
-
-    # Prepare assignment data
     assignment_data = {
         'title': assignment['title'],
-        'questions': assignment['questions'],  # Keep the original questions
+        'questions': assignment['questions'],  
         'courseId': course_id,
         'deadline': deadline_datetime,
-        'file_paths': file_paths  # Store the paths of the uploaded files organized by question ID
+        'file_paths': file_paths 
     }
-    
     result = mongo.db.assignments.insert_one(assignment_data)
     return jsonify({'message': 'Assignment uploaded successfully', 'id': str(result.inserted_id)}), 201
 
@@ -322,7 +295,7 @@ def get_assignment_details(assignment_id):
             'title': assignment['title'],
             'questions': assignment['questions'],
             'courseId': assignment['courseId'],
-            'file_paths': assignment['file_paths'],  # Include file paths if needed
+            'file_paths': assignment['file_paths'],
         }), 200
     return jsonify({'error': 'Assignment not found'}), 404
 
@@ -330,58 +303,43 @@ def get_assignment_details(assignment_id):
 def save_responses(assignment_id):
     if not os.path.exists(app.config['UPLOAD_FOLDER']):
         os.makedirs(app.config['UPLOAD_FOLDER'])
-
-    data = request.form  # Use request.form to get both files and other form data
-
+    data = request.form 
     if 'responses' not in data or 'userId' not in data:
         return jsonify({'error': 'Invalid input, responses or userId not found'}), 400
-
-    # Assuming responses are sent as a JSON string; convert it to a dictionary
-    responses = json.loads(data['responses'])  # Convert string to dictionary
+    responses = json.loads(data['responses']) 
     user_id = data['userId']
-
-    # Prepare to store file paths
     file_paths = {}
-
-    # Iterate over the files
     for question_id in request.files:
-        files = request.files.getlist(question_id)  # Get the list of files for this question
+        files = request.files.getlist(question_id)
         file_paths[question_id] = []
         for file in files:
             if file:
-                # Secure the filename and save the file
                 filename = secure_filename(file.filename)
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-                file.save(file_path)  # Save the file
-
-                # Append the file path to the list
+                file.save(file_path)  
                 file_paths[question_id].append(file_path)
 
     response_data = {
         'assignmentId': assignment_id,
-        'responses': responses,  # Store as dictionary
+        'responses': responses, 
         'userId': user_id,
-        'file_paths': file_paths  # Include file paths in the response data
+        'file_paths': file_paths 
     }
-
     try:
         mongo.db.responses.insert_one(response_data)
         return jsonify({'message': 'Responses and files saved successfully'}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-    
 @app.route('/assignments/<assignment_id>/status', methods=['GET'])
 def check_assignment_status(assignment_id):
     user_id = request.args.get('userId')
     if not user_id:
         return jsonify({'error': 'User ID is required'}), 400
-    
     response = mongo.db.responses.find_one({
         'assignmentId': assignment_id,
         'userId': user_id
     })
-
     if response:
         return jsonify({'attempted': True}), 200
     else:
@@ -393,19 +351,14 @@ def get_students_in_course(assignment_id):
         assignment = mongo.db.assignments.find_one({'_id': ObjectId(assignment_id)})
         if not assignment:
             return jsonify({'error': 'Assignment not found'}), 404
-        
         course_id = assignment['courseId']
         course = mongo.db.courses.find_one({'_id': ObjectId(course_id)})
         if not course:
             return jsonify({'error': 'Course not found'}), 404
-        
         enrolled_students_ids = course['enrolledStudents']
         students = list(mongo.db.students.find({'_id': {'$in': [ObjectId(student_id) for student_id in enrolled_students_ids]}}))
-        
         students = [{**student, '_id': str(student['_id'])} for student in students]
-        
         return jsonify({'students': students})
-        
     except Exception as e:
         return jsonify({'error': str(e)}), 500
     
@@ -424,37 +377,27 @@ def get_student_responses(assignment_id, user_id):
         'assignmentId': assignment_id,
         'userId': user_id
     })
-
     if not responses:
         return jsonify({'error': 'No responses found'}), 404
-
-    # Convert ObjectId to string
     responses['_id'] = str(responses['_id'])
-
-    # Ensure that file_paths are included in the response
     if 'file_paths' not in responses:
         responses['file_paths'] = {}
-
     return jsonify(responses), 200
 
 @app.route('/assignments/grade/<assignment_id>', methods=['POST'])
 def grade_assignment(assignment_id):
     data = request.json
-    print(data)
     if not data or 'userId' not in data or 'grades' not in data:
         return jsonify({'error': 'Invalid input'}), 400
-    
     grading_data = {
         'assignmentId': assignment_id,
         'userId': data['userId'],
         'grades': data['grades']
     }
-    
     existing_grades = mongo.db.grades.find_one({
         'assignmentId': assignment_id,
         'userId': data['userId']
     })
-    
     if existing_grades:
         mongo.db.grades.update_one(
             {'_id': existing_grades['_id']},
@@ -464,7 +407,6 @@ def grade_assignment(assignment_id):
     else:
         result = mongo.db.grades.insert_one(grading_data)
         message = 'Grades submitted successfully'
-    
     mongo.db.responses.update_one(
         {
             'assignmentId': assignment_id,
@@ -472,7 +414,6 @@ def grade_assignment(assignment_id):
         },
         {'$set': {'graded': True}}
     )
-    
     return jsonify({'message': message}), 200
 
 @app.route('/assignments/<assignment_id>/grade-status', methods=['GET'])
@@ -480,29 +421,21 @@ def get_grade_status(assignment_id):
     user_id = request.args.get('userId')
     if not user_id:
         return jsonify({'error': 'User ID is required'}), 400
-
     grade_record = mongo.db.grades.find_one({
         'assignmentId': assignment_id,
         'userId': user_id
     })
-
-    print(f"Checking grades for Assignment ID: {assignment_id}, User ID: {user_id}, Record Found: {grade_record}")
-
     graded = grade_record is not None and 'grades' in grade_record
-
     return jsonify({'graded': graded}), 200
 
 @app.route('/assignments/status', methods=['GET'])
 def get_all_assignments_status():
     user_id = request.args.get('userId')
     course_id = request.args.get('courseId')
-
     if not user_id or not course_id:
         return jsonify({'error': 'User ID and Course ID are required'}), 400
-    
     assignments = list(mongo.db.assignments.find({"courseId": course_id}))
     statuses = []
-
     for assignment in assignments:
         assignment_id = str(assignment.get('_id'))
         response = mongo.db.responses.find_one({
@@ -511,14 +444,11 @@ def get_all_assignments_status():
         })
         attempted = response is not None
         graded = response.get('graded', False) if attempted else False 
-
         statuses.append({
             'assignmentId': assignment_id,
             'attempted': attempted,
             'graded': graded
         })
-    
-    print(statuses)
     return jsonify(statuses), 200
 
 if __name__ == '__main__':

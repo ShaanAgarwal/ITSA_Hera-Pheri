@@ -87,7 +87,6 @@ const LoginForm = ({ open, onClose }) => {
     try {
       const response = await axios.post('http://localhost:5000/login', loginData);
       if (response.status === 200) {
-        console.log(response.data);
         setSnackbarMessage('Login successful!');
         setSnackbarSeverity('success');
         
@@ -133,7 +132,6 @@ const LoginForm = ({ open, onClose }) => {
             <Select
               value={selectedInstitute || ''}
               onChange={(e) => {
-                console.log('Selected Institute:', e.target.value);
                 setSelectedInstitute(e.target.value);
               }}
               label="Institute"

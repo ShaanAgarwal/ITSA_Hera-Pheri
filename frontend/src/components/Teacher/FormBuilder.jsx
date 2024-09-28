@@ -116,7 +116,6 @@ const FormBuilder = ({ courseId }) => {
         // Append each file organized by question ID
         questions.forEach((question) => {
             question.files.forEach((file) => {
-                console.log(`Appending file for question ID ${question.id}:`, file);
                 formData.append(`files[${question.id}]`, file);
             });
         });
@@ -127,7 +126,6 @@ const FormBuilder = ({ courseId }) => {
                     'Content-Type': 'multipart/form-data'
                 }
             });
-            console.log('Assignment created:', response.data);
             setAssignmentName('');
             setQuestions([]);
             setDeadlineDate(dayjs());

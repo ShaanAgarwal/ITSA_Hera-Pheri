@@ -9,7 +9,6 @@ const AssignmentList = ({ assignments, onAssignmentClick }) => {
     const { courseId } = useParams();
 
     useEffect(() => {
-        console.log('Assignments received as props:', assignments);
     }, [assignments]);
 
     useEffect(() => {
@@ -24,7 +23,6 @@ const AssignmentList = ({ assignments, onAssignmentClick }) => {
                     statusMap[status.assignmentId] = status;
                 });
 
-                console.log('Fetched all assignment statuses:', statusMap);
                 setAssignmentStatuses(statusMap);
             } catch (error) {
                 console.error('Error fetching assignment statuses', error);
@@ -54,8 +52,6 @@ const AssignmentList = ({ assignments, onAssignmentClick }) => {
                     assignments.map((assignment, index) => {
                         const assignmentId = assignment.id; 
                         const status = assignmentStatuses[assignmentId] || { attempted: false, graded: false };
-
-                        console.log(`Rendering Assignment ID: ${assignmentId}, Attempted: ${status.attempted}, Graded: ${status.graded}`);
 
                         let backgroundColor = 'inherit';
                         let statusText = 'Pending';
