@@ -1,21 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-
-import {
-    Box,
-    Typography,
-    Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    Snackbar,
-    List,
-    ListItem,
-} from '@mui/material';
+import { Box, Typography, Button, Snackbar, CircularProgress, Grid } from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
-import FormBuilder from './FormBuilder';
+import AssignmentList from './AssignmentList';
+import AddAssignmentDialog from './AddAssignmentDialog';
 
 const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -26,7 +15,7 @@ const CourseDetails = () => {
     const [courseDetails, setCourseDetails] = useState(null);
     const [assignments, setAssignments] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [openFormBuilder, setOpenFormBuilder] = useState(false);
+    const [openDialog, setOpenDialog] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
 
@@ -55,58 +44,53 @@ const CourseDetails = () => {
         fetchAssignments();
     }, [courseId]);
 
-    const handleOpenFormBuilder = () => {
-        setOpenFormBuilder(true);
-    };
-
-    const handleCloseFormBuilder = () => {
-        setOpenFormBuilder(false);
-    };
+    const handleOpenDialog = () => setOpenDialog(true);
+    const handleCloseDialog = () => setOpenDialog(false);
 
     const handleAssignmentCreated = (assignment) => {
         setAssignments((prev) => [...prev, assignment]);
         setSnackbarMessage('Assignment created successfully!');
         setSnackbarOpen(true);
-        handleCloseFormBuilder();
+        handleCloseDialog();
     };
 
     if (loading) {
-        return <div>Loading...</div>;
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+            </Box>
+        );
     }
 
     if (!courseDetails) {
-        return <div>Course not found.</div>;
+        return <Typography variant="h6" color="error">Course not found.</Typography>;
     }
 
     return (
-        <Box sx={{ padding: 2 }}>
-            <Typography variant="h4">{courseDetails.courseName}</Typography>
-            <Typography variant="h6">Description: {courseDetails.courseDescription}</Typography>
-            <Typography variant="body1">Password: {courseDetails.coursePassword}</Typography>
-            <Button variant="contained" color="primary" onClick={handleOpenFormBuilder}>
+        <Box sx={{ padding: 3, backgroundColor: '#f9f9f9', borderRadius: 2, boxShadow: 2 }}>
+            <Typography variant="h4" gutterBottom>{courseDetails.courseName}</Typography>
+            <Typography variant="h6" color="text.secondary">Description:</Typography>
+            <Typography variant="body1" sx={{ marginBottom: 2 }}>{courseDetails.courseDescription}</Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ marginBottom: 2 }}>
+                <strong>Password:</strong> {courseDetails.coursePassword}
+            </Typography>
+            <Button 
+                variant="contained" 
+                color="primary" 
+                onClick={handleOpenDialog} 
+                sx={{ mb: 2 }}
+            >
                 Add Assignment
             </Button>
 
-            <Box mt={4}>
-                <Typography variant="h5">Assignments</Typography>
-                <List>
-                    {assignments.map((assignment) => (
-                        <ListItem key={assignment.id}>
-                            <Typography variant="body1">{assignment.title}</Typography>
-                        </ListItem>
-                    ))}
-                </List>
-            </Box>
+            <AssignmentList assignments={assignments} />
 
-            <Dialog open={openFormBuilder} onClose={handleCloseFormBuilder} fullWidth maxWidth="md">
-                <DialogTitle>Add Assignment</DialogTitle>
-                <DialogContent>
-                    <FormBuilder courseId={courseId} onAssignmentCreated={handleAssignmentCreated} />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={handleCloseFormBuilder}>Close</Button>
-                </DialogActions>
-            </Dialog>
+            <AddAssignmentDialog 
+                open={openDialog} 
+                onClose={handleCloseDialog} 
+                courseId={courseId} 
+                onAssignmentCreated={handleAssignmentCreated} 
+            />
 
             <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
                 <Alert onClose={() => setSnackbarOpen(false)} severity="success">

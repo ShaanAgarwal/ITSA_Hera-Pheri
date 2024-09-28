@@ -5,6 +5,7 @@ import TeacherDashboard from './Pages/TeacherDashboard';
 import StudentDashboard from './Pages/StudentDashboard';
 import CourseDetails from './components/Teacher/CourseDetails';
 import CourseDetailComponent from './components/Student/CourseDetailComponent';
+import AssignmentDetails from './components/Teacher/AssignmentDetails';
 function App() {
   return (
     <>
@@ -16,6 +17,7 @@ function App() {
           <Route path="/studentdashboard" element={<StudentDashboard />} />
           <Route path="/course/:courseId" element={<CourseDetails />} />
           <Route path="/student/course/:courseId" element={<CourseDetailComponent />} />
+          <Route path="/assignments/:assignmentId" element={<AssignmentDetails />} /> {/* New route */}
         </Routes>
       </BrowserRouter>
     </>

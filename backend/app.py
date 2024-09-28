@@ -283,7 +283,49 @@ def check_assignment_status(assignment_id):
     if response:
         return jsonify({'attempted': True}), 200
     else:
-        return jsonify({'attempted': False}), 200
+        return jsonify({'attempted': False}), 200     
+    
+@app.route('/api/courses/students/<assignment_id>', methods=['GET'])
+def get_students_in_course(assignment_id):
+    try:
+        # Fetch the assignment
+        assignment = mongo.db.assignments.find_one({'_id': ObjectId(assignment_id)})
+        if not assignment:
+            return jsonify({'error': 'Assignment not found'}), 404
+        
+        # Fetch the course details
+        course_id = assignment['courseId']
+        course = mongo.db.courses.find_one({'_id': ObjectId(course_id)})
+        if not course:
+            return jsonify({'error': 'Course not found'}), 404
+        
+        # Fetch enrolled students
+        enrolled_students_ids = course['enrolledStudents']
+        students = list(mongo.db.students.find({'_id': {'$in': [ObjectId(student_id) for student_id in enrolled_students_ids]}}))
+        
+        # Serialize ObjectId to string for JSON response
+        students = [{**student, '_id': str(student['_id'])} for student in students]
+        
+        return jsonify({'students': students})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+    
+@app.route('/api/assignments/attempted/students/<assignment_id>', methods=['GET'])
+def get_students_attempted_assignment(assignment_id):
+    try:
+        # Fetch responses for the assignment
+        responses = list(mongo.db.responses.find({'assignmentId': assignment_id}))
+        
+        # Create a set of userIds who have attempted the assignment
+        attempted_student_ids = {response['userId'] for response in responses}
+        
+        # Convert set to list for JSON serialization
+        return jsonify({'attemptedStudentIds': list(attempted_student_ids)})
+        
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)
