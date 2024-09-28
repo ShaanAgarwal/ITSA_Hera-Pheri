@@ -99,6 +99,10 @@ const LoginForm = ({ open, onClose }) => {
         // Navigate to /admindashboard if the user type is admin
         if (userType === 'admin') {
           navigate('/admindashboard'); // Navigate to admin dashboard
+        } else if(userType == 'teacher') {
+            navigate('/teacherdashboard');
+        } else {
+            navigate('/studentdashboard');
         }
       } else {
         setSnackbarMessage('Unexpected response. Please try again.');

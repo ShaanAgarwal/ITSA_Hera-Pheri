@@ -27,11 +27,11 @@ const HomePage = () => {
     const timer = setTimeout(() => {
       setLoading(false);
       setShowFeatureCards(true);
-    }, 2000);
+    }, 500);
 
     const typingEffect = setInterval(() => {
       setLoadingText((prev) => (prev.length < 12 ? prev + "." : "Loading"));
-    }, 400);
+    }, 150);
 
     return () => {
       clearTimeout(timer);
