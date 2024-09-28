@@ -239,7 +239,7 @@ def get_assignments_by_course(course_id):
     assignment_list = [{'id': str(assignment['_id']), 'title': assignment['title'], 'questions': assignment['questions']} for assignment in assignments]
     return jsonify(assignment_list), 200
 
-@app.route('/assignment/<assignment_id>', methods=['GET'])
+@app.route('/assignments/<assignment_id>', methods=['GET'])
 def get_assignment_details(assignment_id):
     assignment = mongo.db.assignments.find_one({'_id': ObjectId(assignment_id)})
     if assignment:
@@ -250,6 +250,22 @@ def get_assignment_details(assignment_id):
             'courseId': assignment['courseId']
         }), 200
     return jsonify({'error': 'Assignment not found'}), 404
+
+@app.route('/assignments/<assignment_id>/responses', methods=['POST'])
+def save_responses(assignment_id):
+    data = request.json
+    if not data or 'responses' not in data:
+        return jsonify({'error': 'Invalid input, responses not found'}), 400
+    responses = data['responses']
+    response_data = {
+        'assignmentId': assignment_id,
+        'responses': responses,
+    }
+    try:
+        mongo.db.responses.insert_one(response_data)
+        return jsonify({'message': 'Responses saved successfully'}), 201
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -4,7 +4,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import TeacherDashboard from './Pages/TeacherDashboard';
 import StudentDashboard from './Pages/StudentDashboard';
 import CourseDetails from './components/Teacher/CourseDetails';
-
+import CourseDetailComponent from './components/Student/CourseDetailComponent';
 function App() {
   return (
     <>
@@ -15,6 +15,7 @@ function App() {
           <Route path="/teacherdashboard" element={<TeacherDashboard />} />
           <Route path="/studentdashboard" element={<StudentDashboard />} />
           <Route path="/course/:courseId" element={<CourseDetails />} />
+          <Route path="/student/course/:courseId" element={<CourseDetailComponent />} />
         </Routes>
       </BrowserRouter>
     </>

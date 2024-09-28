@@ -1,21 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Student/Navbar';
 import axios from 'axios';
-import {
-    Box,
-    Typography,
-    List,
-    ListItem,
-    ListItemText,
-    Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    TextField,
-    DialogActions,
-    Snackbar,
-    Alert
-} from '@mui/material';
+import { Box, Typography, Snackbar, Alert } from '@mui/material';
+import TeacherList from '../components/Student/TeacherList';
+import EnrolledCourses from '../components/Student/EnrolledCourses';
+import CourseDialog from '../components/Student/CourseDialog';
+import EnrollDialog from '../components/Student/EnrollDialog';
 
 const StudentDashboard = () => {
     const [instituteName, setInstituteName] = useState('');
@@ -35,22 +25,18 @@ const StudentDashboard = () => {
             try {
                 const response = await axios.get(`http://localhost:5000/student/${userId}`);
                 setStudentName(response.data.studentName);
-
                 const instituteResponse = await axios.get(`http://localhost:5000/institutes/${response.data.instituteId}`);
                 setInstituteName(instituteResponse.data.instituteName);
-
                 const teachersResponse = await axios.get(`http://localhost:5000/teachers/institute/${response.data.instituteId}`);
                 setTeachers(teachersResponse.data);
-
                 const coursesResponse = await axios.get(`http://localhost:5000/student/${userId}/enrolledCourses`);
                 setEnrolledCourses(coursesResponse.data);
             } catch (error) {
                 console.error('Error fetching student details:', error);
             } finally {
                 setLoading(false);
-            }
+            };
         };
-
         fetchStudentDetails();
     }, [userId]);
 
@@ -66,7 +52,7 @@ const StudentDashboard = () => {
             setSelectedTeacher(teacherId);
         } catch (error) {
             console.error('Error fetching courses:', error);
-        }
+        };
     };
 
     const handleClose = () => {
@@ -84,8 +70,7 @@ const StudentDashboard = () => {
         if (!enrollPassword || !selectedCourseId) {
             alert("Please enter the password and select a course.");
             return;
-        }
-
+        };
         try {
             const response = await axios.put(`http://localhost:5000/courses/enroll/${selectedCourseId}`, { 
                 userId, 
@@ -96,16 +81,16 @@ const StudentDashboard = () => {
                 handleClose();
                 const coursesResponse = await axios.get(`http://localhost:5000/student/${userId}/enrolledCourses`);
                 setEnrolledCourses(coursesResponse.data);
-            }
+            };
         } catch (error) {
             console.error('Error enrolling in course:', error);
             alert(error.response?.data?.error || 'An error occurred while enrolling in the course.');
-        }
+        };
     };
 
     if (loading) {
         return <div>Loading...</div>;
-    }
+    };
 
     return (
         <div>
@@ -117,75 +102,18 @@ const StudentDashboard = () => {
             <Box sx={{ padding: 2 }}>
                 <Typography variant="h4">Welcome to the Student Dashboard</Typography>
                 <Typography variant="h5">Teachers in your Institute:</Typography>
-                <List>
-                    {teachers.map(teacher => (
-                        <ListItem key={teacher.id}>
-                            <ListItemText 
-                                primary={
-                                    <Button onClick={() => handleTeacherClick(teacher.id)}>
-                                        {teacher.teacherName}
-                                    </Button>
-                                } 
-                            />
-                        </ListItem>
-                    ))}
-                </List>
-                
+                <TeacherList teachers={teachers} onTeacherClick={handleTeacherClick} />
                 <Typography variant="h5" sx={{ marginTop: 3 }}>Enrolled Courses:</Typography>
-                <List>
-                    {enrolledCourses.length > 0 ? (
-                        enrolledCourses.map(course => (
-                            <ListItem key={course.id}>
-                                <ListItemText 
-                                    primary={course.courseName} 
-                                    secondary={course.courseDescription} 
-                                />
-                            </ListItem>
-                        ))
-                    ) : (
-                        <Typography>No courses enrolled yet.</Typography>
-                    )}
-                </List>
+                <EnrolledCourses enrolledCourses={enrolledCourses} />
             </Box>
-
-            <Dialog open={Boolean(selectedTeacher)} onClose={handleClose}>
-                <DialogTitle>Courses Taught by Teacher</DialogTitle>
-                <DialogContent>
-                    {courses.length > 0 ? (
-                        <List>
-                            {courses.map(course => (
-                                <ListItem key={course.id}>
-                                    <ListItemText primary={course.courseName} secondary={course.courseDescription} />
-                                    <Button onClick={() => handleEnrollClick(course.id)}>Enroll</Button>
-                                </ListItem>
-                            ))}
-                        </List>
-                    ) : (
-                        <Typography>No courses found for this teacher.</Typography>
-                    )}
-                </DialogContent>
-            </Dialog>
-
-            <Dialog open={Boolean(selectedCourseId)} onClose={() => setSelectedCourseId(null)}>
-                <DialogTitle>Enroll in Course</DialogTitle>
-                <DialogContent>
-                    <TextField
-                        autoFocus
-                        margin="dense"
-                        label="Course Password"
-                        type="password"
-                        fullWidth
-                        variant="standard"
-                        value={enrollPassword}
-                        onChange={(e) => setEnrollPassword(e.target.value)}
-                    />
-                </DialogContent>
-                <DialogActions>
-                    <Button onClick={() => setSelectedCourseId(null)}>Cancel</Button>
-                    <Button onClick={handleEnroll}>Enroll</Button>
-                </DialogActions>
-            </Dialog>
-
+            <CourseDialog open={Boolean(selectedTeacher)} onClose={handleClose} courses={courses} onEnrollClick={handleEnrollClick} />
+            <EnrollDialog 
+                open={Boolean(selectedCourseId)} 
+                onClose={() => setSelectedCourseId(null)} 
+                enrollPassword={enrollPassword} 
+                setEnrollPassword={setEnrollPassword} 
+                onEnroll={handleEnroll} 
+            />
             <Snackbar open={enrollmentSuccess} autoHideDuration={6000} onClose={() => setEnrollmentSuccess(false)}>
                 <Alert onClose={() => setEnrollmentSuccess(false)} severity="success">
                     Enrollment successful!
