@@ -17,7 +17,7 @@ function App() {
           <Route path="/studentdashboard" element={<StudentDashboard />} />
           <Route path="/course/:courseId" element={<CourseDetails />} />
           <Route path="/student/course/:courseId" element={<CourseDetailComponent />} />
-          <Route path="/assignments/:assignmentId" element={<AssignmentDetails />} /> {/* New route */}
+          <Route path="/assignments/:assignmentId" element={<AssignmentDetails />} />
         </Routes>
       </BrowserRouter>
     </>

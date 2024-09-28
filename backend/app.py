@@ -320,6 +320,56 @@ def get_students_attempted_assignment(assignment_id):
         return jsonify({'attemptedStudentIds': list(attempted_student_ids)})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+@app.route('/assignment/responses/<assignment_id>/<user_id>', methods=['GET'])
+def get_student_responses(assignment_id, user_id):
+    responses = mongo.db.responses.find_one({
+        'assignmentId': assignment_id,
+        'userId': user_id
+    })
+    if not responses:
+        return jsonify({'error': 'No responses found'}), 404
+    responses['_id'] = str(responses['_id'])
+    return jsonify(responses), 200
+
+@app.route('/assignments/grade/<assignment_id>', methods=['POST'])
+def grade_assignment(assignment_id):
+    data = request.json
+    print(data)
+    if not data or 'userId' not in data or 'grades' not in data:
+        return jsonify({'error': 'Invalid input'}), 400
+    
+    grading_data = {
+        'assignmentId': assignment_id,
+        'userId': data['userId'],
+        'grades': data['grades']
+    }
+    
+    existing_grades = mongo.db.grades.find_one({
+        'assignmentId': assignment_id,
+        'userId': data['userId']
+    })
+    
+    if existing_grades:
+        mongo.db.grades.update_one(
+            {'_id': existing_grades['_id']},
+            {'$set': {'grades': grading_data['grades']}}
+        )
+        message = 'Grades updated successfully'
+    else:
+        result = mongo.db.grades.insert_one(grading_data)
+        message = 'Grades submitted successfully'
+    
+    # Mark grading as true in responses
+    mongo.db.responses.update_one(
+        {
+            'assignmentId': assignment_id,
+            'userId': data['userId']
+        },
+        {'$set': {'graded': True}}  # Assuming you want to add a 'graded' field
+    )
+    
+    return jsonify({'message': message}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
