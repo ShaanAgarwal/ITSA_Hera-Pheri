@@ -15,6 +15,7 @@ import {
   FormHelperText,
 } from '@mui/material';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 
 const LoginForm = ({ open, onClose }) => {
   const [username, setUsername] = useState('');
@@ -25,6 +26,8 @@ const LoginForm = ({ open, onClose }) => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState('');
   const [snackbarSeverity, setSnackbarSeverity] = useState('success');
+  
+  const navigate = useNavigate(); // Initialize useNavigate
 
   useEffect(() => {
     const fetchInstitutes = async () => {
@@ -84,8 +87,19 @@ const LoginForm = ({ open, onClose }) => {
     try {
       const response = await axios.post('http://localhost:5000/login', loginData);
       if (response.status === 200) {
+        console.log(response.data);
         setSnackbarMessage('Login successful!');
         setSnackbarSeverity('success');
+        
+        // Store user ID and other info in local storage
+        localStorage.setItem('userId', response.data.user.id);
+        localStorage.setItem('username', response.data.user.username);
+        localStorage.setItem('userType', response.data.user.userType);
+
+        // Navigate to /admindashboard if the user type is admin
+        if (userType === 'admin') {
+          navigate('/admindashboard'); // Navigate to admin dashboard
+        }
       } else {
         setSnackbarMessage('Unexpected response. Please try again.');
         setSnackbarSeverity('warning');

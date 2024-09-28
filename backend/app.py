@@ -40,14 +40,37 @@ def login():
     user = mongo.db.institutes.find_one({'adminUsername': username, 'adminPassword': password})
     
     if user:
-        return jsonify({'message': 'Login successful', 'user': {'username': username, 'userType': userType}}), 200
+        user_id = str(user['_id'])  # Convert ObjectId to string for JSON compatibility
+        return jsonify({
+            'message': 'Login successful',
+            'user': {
+                'id': user_id,
+                'username': username,
+                'userType': userType
+            }
+        }), 200
+    
     return jsonify({'error': 'Invalid credentials'}), 401
+
 
 @app.route('/institutes', methods=['GET'])
 def get_institutes():
     institutes = mongo.db.institutes.find()
     institute_list = [{'id': str(institute['_id']), 'instituteName': institute['instituteName']} for institute in institutes]
     return jsonify(institute_list), 200
+
+@app.route('/admin/<user_id>', methods=['GET'])
+def get_admin_details(user_id):
+    admin = mongo.db.institutes.find_one({'_id': ObjectId(user_id)})
+    
+    if admin:
+        return jsonify({
+            'id': str(admin['_id']),
+            'instituteName': admin['instituteName'],
+            'adminUsername': admin['adminUsername']
+        }), 200
+    
+    return jsonify({'error': 'Admin not found'}), 404
 
 if __name__ == '__main__':
     app.run(debug=True)
