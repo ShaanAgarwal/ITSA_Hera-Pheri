@@ -1,29 +1,40 @@
 import React, { useEffect, useState } from 'react';
 import { List, ListItem, ListItemText, Typography, Box, Divider } from '@mui/material';
 import axios from 'axios';
+import { useParams } from 'react-router-dom';
 
 const AssignmentList = ({ assignments, onAssignmentClick }) => {
-
-    const [attemptedAssignments, setAttemptedAssignments] = useState({});
+    const [assignmentStatuses, setAssignmentStatuses] = useState({});
     const userId = localStorage.getItem('userId');
+    const { courseId } = useParams();
 
     useEffect(() => {
-        const fetchAttemptedStatuses = async () => {
-            const statuses = await Promise.all(assignments.map(async (assignment) => {
-                const response = await axios.get(`http://localhost:5000/assignments/${assignment.id}/status`, {
-                    params: { userId },
+        console.log('Assignments received as props:', assignments);
+    }, [assignments]);
+
+    useEffect(() => {
+        const fetchStatuses = async () => {
+            try {
+                const response = await axios.get(`http://localhost:5000/assignments/status`, {
+                    params: { userId, courseId },
                 });
-                return { id: assignment.id, attempted: response.data.attempted };
-            }));
-            const statusMap = statuses.reduce((acc, status) => {
-                acc[status.id] = status.attempted;
-                return acc;
-            }, {});
-            setAttemptedAssignments(statusMap);
+
+                const statusMap = {};
+                response.data.forEach(status => {
+                    statusMap[status.assignmentId] = status;
+                });
+
+                console.log('Fetched all assignment statuses:', statusMap);
+                setAssignmentStatuses(statusMap);
+            } catch (error) {
+                console.error('Error fetching assignment statuses', error);
+            }
         };
 
-        fetchAttemptedStatuses();
-    }, [assignments, userId]);
+        if (userId && courseId) {
+            fetchStatuses();
+        }
+    }, [userId, courseId]);
 
     return (
         <Box
@@ -40,36 +51,62 @@ const AssignmentList = ({ assignments, onAssignmentClick }) => {
             </Typography>
             <List>
                 {assignments.length > 0 ? (
-                    assignments.map((assignment, index) => (
-                        <React.Fragment key={assignment.id}>
-                            <ListItem
-                                onClick={() => {
-                                    if (!attemptedAssignments[assignment.id]) {
-                                        onAssignmentClick(assignment.id);
-                                    }
-                                }}
-                                sx={{
-                                    padding: 1,
-                                    borderRadius: 1,
-                                    backgroundColor: attemptedAssignments[assignment.id] ? '#e0e0e0' : 'inherit',
-                                    '&:hover': !attemptedAssignments[assignment.id] && {
-                                        backgroundColor: '#f5f5f5',
-                                        cursor: 'pointer',
-                                    },
-                                }}
-                            >
-                                <ListItemText
-                                    primary={assignment.title}
-                                    secondary={attemptedAssignments[assignment.id] ? "Attempted" : "Pending"}
-                                    sx={{
-                                        fontWeight: 'medium',
-                                        color: '#555',
+                    assignments.map((assignment, index) => {
+                        const assignmentId = assignment.id; 
+                        const status = assignmentStatuses[assignmentId] || { attempted: false, graded: false };
+
+                        console.log(`Rendering Assignment ID: ${assignmentId}, Attempted: ${status.attempted}, Graded: ${status.graded}`);
+
+                        let backgroundColor = 'inherit';
+                        let statusText = 'Pending';
+
+                        if (status.attempted) {
+                            if (status.graded) {
+                                backgroundColor = '#d0ffd0';
+                                statusText = 'Graded';
+                            } else {
+                                backgroundColor = '#e0e0e0';
+                                statusText = 'Attempted';
+                            }
+                        }
+
+                        return (
+                            <React.Fragment key={assignmentId}>
+                                <ListItem
+                                    onClick={() => {
+                                        if (!status.attempted && !status.graded) {
+                                            onAssignmentClick(assignmentId);
+                                        }
                                     }}
-                                />
-                            </ListItem>
-                            {index < assignments.length - 1 && <Divider sx={{ marginY: 1 }} />}
-                        </React.Fragment>
-                    ))
+                                    sx={{
+                                        padding: 1,
+                                        borderRadius: 1,
+                                        backgroundColor: backgroundColor,
+                                        '&:hover': !status.attempted && !status.graded && {
+                                            backgroundColor: '#f5f5f5',
+                                            cursor: 'pointer',
+                                        },
+                                    }}
+                                >
+                                    <ListItemText
+                                        primary={assignment.title}
+                                        secondary={
+                                            <Typography variant="body2" color="textSecondary">
+                                                ID: {assignmentId} - Status: {statusText}
+                                            </Typography>
+                                        }
+                                        sx={{
+                                            fontWeight: 'medium',
+                                            color: '#555',
+                                        }}
+                                    />
+                                </ListItem>
+                                {index < assignments.length - 1 && (
+                                    <Divider key={`divider-${assignmentId}`} sx={{ marginY: 1 }} />
+                                )}
+                            </React.Fragment>
+                        );
+                    })
                 ) : (
                     <Typography variant="body2" sx={{ color: '#777' }}>
                         No assignments found for this course.

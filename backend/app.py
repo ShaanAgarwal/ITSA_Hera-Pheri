@@ -360,16 +360,61 @@ def grade_assignment(assignment_id):
         result = mongo.db.grades.insert_one(grading_data)
         message = 'Grades submitted successfully'
     
-    # Mark grading as true in responses
     mongo.db.responses.update_one(
         {
             'assignmentId': assignment_id,
             'userId': data['userId']
         },
-        {'$set': {'graded': True}}  # Assuming you want to add a 'graded' field
+        {'$set': {'graded': True}}
     )
     
     return jsonify({'message': message}), 200
+
+@app.route('/assignments/<assignment_id>/grade-status', methods=['GET'])
+def get_grade_status(assignment_id):
+    user_id = request.args.get('userId')
+    if not user_id:
+        return jsonify({'error': 'User ID is required'}), 400
+
+    grade_record = mongo.db.grades.find_one({
+        'assignmentId': assignment_id,
+        'userId': user_id
+    })
+
+    print(f"Checking grades for Assignment ID: {assignment_id}, User ID: {user_id}, Record Found: {grade_record}")
+
+    graded = grade_record is not None and 'grades' in grade_record
+
+    return jsonify({'graded': graded}), 200
+
+@app.route('/assignments/status', methods=['GET'])
+def get_all_assignments_status():
+    user_id = request.args.get('userId')
+    course_id = request.args.get('courseId')
+
+    if not user_id or not course_id:
+        return jsonify({'error': 'User ID and Course ID are required'}), 400
+    
+    assignments = list(mongo.db.assignments.find({"courseId": course_id}))
+    statuses = []
+
+    for assignment in assignments:
+        assignment_id = str(assignment.get('_id'))
+        response = mongo.db.responses.find_one({
+            'assignmentId': assignment_id,
+            'userId': user_id
+        })
+        attempted = response is not None
+        graded = response.get('graded', False) if attempted else False 
+
+        statuses.append({
+            'assignmentId': assignment_id,
+            'attempted': attempted,
+            'graded': graded
+        })
+    
+    print(statuses)
+    return jsonify(statuses), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
