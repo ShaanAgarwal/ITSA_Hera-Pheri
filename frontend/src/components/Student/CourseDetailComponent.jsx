@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
-import { useParams } from 'react-router-dom';
-import FormRenderer from './FormRenderer';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Container, Grid, Typography, Box, AppBar, Toolbar, IconButton } from '@mui/material';
+import CourseDetail from './CourseDetailsComponents/CourseDetail';
+import AssignmentList from './CourseDetailsComponents/AssignmentList';
+import AssignmentModal from './CourseDetailsComponents/AssignmentModal';
+import LoadingIndicator from './CourseDetailsComponents/LoadingIndicator';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 
 const CourseDetailComponent = () => {
     const { courseId } = useParams();
@@ -10,13 +15,13 @@ const CourseDetailComponent = () => {
     const [loading, setLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedAssignmentId, setSelectedAssignmentId] = useState(null);
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchCourseDetails = async () => {
             try {
                 const courseResponse = await axios.get(`http://localhost:5000/course/${courseId}`);
                 setCourse(courseResponse.data);
-
                 const assignmentsResponse = await axios.get(`http://localhost:5000/course/${courseId}/assignments`);
                 setAssignments(assignmentsResponse.data);
             } catch (error) {
@@ -39,62 +44,38 @@ const CourseDetailComponent = () => {
     };
 
     if (loading) {
-        return <div>Loading...</div>;
+        return <LoadingIndicator />;
     }
 
     return (
-        <div>
-            <h1>{course.courseName}</h1>
-            <p>{course.courseDescription}</p>
-            <h2>Assignments</h2>
-            {assignments.length > 0 ? (
-                <ul>
-                    {assignments.map(assignment => (
-                        <li key={assignment.id} onClick={() => handleAssignmentClick(assignment.id)}>
-                            {assignment.title}
-                        </li>
-                    ))}
-                </ul>
-            ) : (
-                <p>No assignments found for this course.</p>
-            )}
+        <Container>
+            <AppBar position="static">
+                <Toolbar>
+                    <IconButton edge="start" color="inherit" aria-label="back" onClick={() => navigate(-1)}>
+                        <ArrowBackIcon />
+                    </IconButton>
+                    <Typography variant="h6" sx={{ flexGrow: 1 }}>
+                        Course Details
+                    </Typography>
+                </Toolbar>
+            </AppBar>
 
-            {isModalOpen && (
-                <div className="modal">
-                    <div className="modal-content">
-                        <h3>{assignments.find(a => a.id === selectedAssignmentId)?.title}</h3>
-                        <FormRenderer assignmentId={selectedAssignmentId} />
-                        <button onClick={closeModal}>Close</button>
-                    </div>
-                </div>
-            )}
+            <Box sx={{ padding: 3 }}>
+                {course && <CourseDetail course={course} />}
+                
+                <Typography variant="h5" sx={{ marginY: 2 }}>
+                    Assignments
+                </Typography>
+                <AssignmentList assignments={assignments} onAssignmentClick={handleAssignmentClick} />
+            </Box>
 
-            <style jsx>{`
-                .modal {
-                    position: fixed;
-                    top: 0;
-                    left: 0;
-                    right: 0;
-                    bottom: 0;
-                    background-color: rgba(0, 0, 0, 0.5);
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-                .modal-content {
-                    background: white;
-                    padding: 20px;
-                    border-radius: 8px;
-                    width: 400px; /* Increased width */
-                    max-height: 80vh; /* Set maximum height */
-                    overflow-y: auto; /* Enable scrolling */
-                    text-align: center;
-                }
-                button {
-                    margin-top: 10px;
-                }
-            `}</style>
-        </div>
+            <AssignmentModal 
+                open={isModalOpen} 
+                onClose={closeModal} 
+                assignmentTitle={assignments.find(a => a.id === selectedAssignmentId)?.title} 
+                assignmentId={selectedAssignmentId} 
+            />
+        </Container>
     );
 };
 

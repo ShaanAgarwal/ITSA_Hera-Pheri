@@ -254,18 +254,36 @@ def get_assignment_details(assignment_id):
 @app.route('/assignments/<assignment_id>/responses', methods=['POST'])
 def save_responses(assignment_id):
     data = request.json
-    if not data or 'responses' not in data:
-        return jsonify({'error': 'Invalid input, responses not found'}), 400
+    if not data or 'responses' not in data or 'userId' not in data:
+        return jsonify({'error': 'Invalid input, responses or userId not found'}), 400
     responses = data['responses']
+    user_id = data['userId']
     response_data = {
         'assignmentId': assignment_id,
         'responses': responses,
+        'userId': user_id, 
     }
     try:
         mongo.db.responses.insert_one(response_data)
         return jsonify({'message': 'Responses saved successfully'}), 201
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+    
+@app.route('/assignments/<assignment_id>/status', methods=['GET'])
+def check_assignment_status(assignment_id):
+    user_id = request.args.get('userId')  # Expecting userId as a query parameter
+    if not user_id:
+        return jsonify({'error': 'User ID is required'}), 400
+    
+    response = mongo.db.responses.find_one({
+        'assignmentId': assignment_id,
+        'userId': user_id
+    })
+
+    if response:
+        return jsonify({'attempted': True}), 200
+    else:
+        return jsonify({'attempted': False}), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

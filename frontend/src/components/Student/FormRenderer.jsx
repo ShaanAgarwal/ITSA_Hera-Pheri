@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -7,31 +7,27 @@ import {
   RadioGroup,
   Radio,
   FormControlLabel,
-  Checkbox,
   FormControl,
   Alert,
+  Paper,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import axios from "axios";
 
-const FormRenderer = ({ assignmentId }) => {
-  const [form, setForm] = useState(null); // Holds the form structure
-  const [responses, setResponses] = useState({}); // Holds user responses
-  const [error, setError] = useState(null); // Holds error messages
-  const [success, setSuccess] = useState(null); // Holds success messages
+const FormRenderer = ({ assignmentId, userId }) => { // Accept userId as a prop
+  const [form, setForm] = useState(null);
+  const [responses, setResponses] = useState({});
+  const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(null);
 
-  // Fetch assignment data when assignmentId changes
   React.useEffect(() => {
     const fetchAssignment = async () => {
       try {
         const response = await axios.get(`http://localhost:5000/assignments/${assignmentId}`);
         const data = response.data;
-
-        // Basic validation
         if (!data.questions || !Array.isArray(data.questions)) {
           throw new Error("Invalid assignment structure: 'questions' array is missing.");
         }
-
         setForm(data);
         setSuccess("Assignment loaded successfully!");
       } catch (err) {
@@ -43,50 +39,34 @@ const FormRenderer = ({ assignmentId }) => {
     fetchAssignment();
   }, [assignmentId]);
 
-  // Handler for input changes in the form
   const handleChange = (questionId, value) => {
     setResponses((prev) => ({ ...prev, [questionId]: value }));
   };
 
-  // Handler for submitting the form responses
   const handleSubmit = async () => {
     if (!form) {
-        setError("No form data to submit.");
-        return;
+      setError("No form data to submit.");
+      return;
     }
-
-    const answers = JSON.stringify(responses, null, 2);
-
-    // Create the Blob for downloading
-    const blob = new Blob([answers], { type: "application/json" });
-    const href = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = href;
-    link.download = "responses.json";
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    
-    // API call to save the responses in the backend
+    const userId = localStorage.getItem('userId');
     try {
-        await axios.post(`http://localhost:5000/assignments/${assignmentId}/responses`, {
-            responses,
-        });
-        setSuccess("Responses saved successfully in the database!");
+      await axios.post(`http://localhost:5000/assignments/${assignmentId}/responses`, {
+        responses,
+        userId, // Include userId in the request
+      });
+      setSuccess("Responses saved successfully in the database!");
     } catch (err) {
-        console.error("Error saving responses:", err);
-        setError("Failed to save responses.");
+      console.error("Error saving responses:", err);
+      setError("Failed to save responses.");
     }
-};
-
+  };
 
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
+    <Box sx={{ maxWidth: 600, mx: "auto", mt: 4, p: 3, borderRadius: 2, boxShadow: 3 }}>
+      <Typography variant="h4" gutterBottom align="center">
         Assignment Renderer
       </Typography>
 
-      {/* Display success or error messages */}
       {success && (
         <Alert severity="success" onClose={() => setSuccess(null)} sx={{ mb: 2 }}>
           {success}
@@ -98,78 +78,75 @@ const FormRenderer = ({ assignmentId }) => {
         </Alert>
       )}
 
-      {/* If no form is loaded, show a message */}
       {!form ? (
-        <Typography variant="body1" mt={2}>
+        <Typography variant="body1" mt={2} align="center">
           Loading assignment...
         </Typography>
       ) : (
-        /* If form is loaded, render the form */
         <Box>
           <Typography variant="h5" gutterBottom>
             {form.title || "Untitled Assignment"}
           </Typography>
           {form.questions.map((question, index) => (
-            (question.type === "mcq" || question.type === "short" || question.type === "long") && (
-              <Box key={question.id} mb={3} p={2} border={1} borderRadius={2}>
-                <Typography variant="h6">
-                  {index + 1}. {question.text} 
-                  {question.maxMarks && <span> (Max Marks: {question.maxMarks})</span>}
-                </Typography>
+            <Paper key={question.id} elevation={1} sx={{ mb: 2, p: 2, borderRadius: 2 }}>
+              <Typography variant="h6">
+                {index + 1}. {question.text}
+                {question.maxMarks && <span> (Max Marks: {question.maxMarks})</span>}
+              </Typography>
 
-                {/* Render based on question type */}
-                {question.type === "short" && (
-                  <TextField
-                    variant="outlined"
-                    fullWidth
-                    margin="normal"
+              {question.type === "short" && (
+                <TextField
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  value={responses[question.id] || ""}
+                  onChange={(e) => handleChange(question.id, e.target.value)}
+                  placeholder="Your answer"
+                  sx={{ backgroundColor: "#fff", borderRadius: 1 }}
+                />
+              )}
+
+              {question.type === "long" && (
+                <TextField
+                  variant="outlined"
+                  fullWidth
+                  margin="normal"
+                  multiline
+                  rows={4}
+                  value={responses[question.id] || ""}
+                  onChange={(e) => handleChange(question.id, e.target.value)}
+                  placeholder="Your detailed answer"
+                  sx={{ backgroundColor: "#fff", borderRadius: 1 }}
+                />
+              )}
+
+              {question.type === "mcq" && (
+                <FormControl component="fieldset" margin="normal">
+                  <RadioGroup
                     value={responses[question.id] || ""}
                     onChange={(e) => handleChange(question.id, e.target.value)}
-                    placeholder="Your answer"
-                  />
-                )}
-
-                {question.type === "long" && (
-                  <TextField
-                    variant="outlined"
-                    fullWidth
-                    margin="normal"
-                    multiline
-                    rows={4}
-                    value={responses[question.id] || ""}
-                    onChange={(e) => handleChange(question.id, e.target.value)}
-                    placeholder="Your detailed answer"
-                  />
-                )}
-
-                {question.type === "mcq" && (
-                  <FormControl component="fieldset" margin="normal">
-                    <RadioGroup
-                      value={responses[question.id] || ""}
-                      onChange={(e) => handleChange(question.id, e.target.value)}
-                    >
-                      {question.options.map((option, idx) => (
-                        <FormControlLabel
-                          key={idx}
-                          value={option}
-                          control={<Radio />}
-                          label={option}
-                        />
-                      ))}
-                    </RadioGroup>
-                  </FormControl>
-                )}
-              </Box>
-            )
+                  >
+                    {question.options.map((option, idx) => (
+                      <FormControlLabel
+                        key={idx}
+                        value={option}
+                        control={<Radio />}
+                        label={option}
+                      />
+                    ))}
+                  </RadioGroup>
+                </FormControl>
+              )}
+            </Paper>
           ))}
 
-          {/* Submit Button */}
-          <Box mt={4}>
+          <Box mt={4} display="flex" justifyContent="center">
             <Button
               variant="contained"
               color="primary"
               startIcon={<SaveIcon />}
               onClick={handleSubmit}
+              sx={{ padding: "10px 20px", borderRadius: 1 }}
             >
               Submit Responses
             </Button>
