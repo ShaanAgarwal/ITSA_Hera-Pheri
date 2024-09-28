@@ -13,13 +13,15 @@ import {
   Grow,
   Zoom,
 } from '@mui/material';
-import RegistrationForm from '../components/RegistrationForm';  // Import the RegistrationForm
+import RegistrationForm from '../components/RegistrationForm';
+import LoginForm from '../components/LoginForm';
 
 const HomePage = () => {
   const [showFeatureCards, setShowFeatureCards] = useState(false);
   const [loading, setLoading] = useState(true);
   const [loadingText, setLoadingText] = useState("Loading");
-  const [registerOpen, setRegisterOpen] = useState(false);  // State for dialog
+  const [registerOpen, setRegisterOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -105,6 +107,7 @@ const HomePage = () => {
                   <Button
                     color="inherit"
                     variant="contained"
+                    onClick={() => setLoginOpen(true)}
                     sx={{
                       marginRight: 2,
                       borderRadius: '20px',
@@ -237,6 +240,7 @@ const HomePage = () => {
 
           {/* Registration Form Dialog */}
           <RegistrationForm open={registerOpen} onClose={() => setRegisterOpen(false)} />
+          <LoginForm open={loginOpen} onClose={() => setLoginOpen(false)} />
         </>
       )}
     </Box>
