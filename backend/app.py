@@ -261,5 +261,61 @@ def get_enrolled_courses(user_id):
 
     return jsonify(course_list), 200
 
+@app.route('/upload-assignment/<course_id>', methods=['POST'])
+def upload_assignment(course_id):
+    data = request.json
+    
+    if not data or 'title' not in data or 'questions' not in data:
+        return jsonify({'error': 'Invalid input'}), 400
+
+    # Construct assignment data with a reference to the course
+    assignment_data = {
+        'title': data['title'],
+        'questions': data['questions'],
+        'courseId': course_id  # Reference to the course
+    }
+
+    result = mongo.db.assignments.insert_one(assignment_data)
+    return jsonify({'message': 'Assignment uploaded successfully', 'id': str(result.inserted_id)}), 201
+
+@app.route('/course/<course_id>/assignments', methods=['GET'])
+def get_assignments_by_course(course_id):
+    assignments = mongo.db.assignments.find({'courseId': course_id})
+    assignment_list = [{'id': str(assignment['_id']), 'title': assignment['title'], 'questions': assignment['questions']} for assignment in assignments]
+    return jsonify(assignment_list), 200
+
+@app.route('/assignment/<assignment_id>', methods=['GET'])
+def get_assignment_details(assignment_id):
+    assignment = mongo.db.assignments.find_one({'_id': ObjectId(assignment_id)})
+    
+    if assignment:
+        return jsonify({
+            'id': str(assignment['_id']),
+            'title': assignment['title'],
+            'questions': assignment['questions'],
+            'courseId': assignment['courseId']
+        }), 200
+    
+    return jsonify({'error': 'Assignment not found'}), 404
+
+@app.route('/assignment/<assignment_id>', methods=['PUT'])
+def update_assignment(assignment_id):
+    data = request.json
+
+    if not data or 'title' not in data or 'questions' not in data:
+        return jsonify({'error': 'Invalid input'}), 400
+
+    updated_assignment = {
+        'title': data['title'],
+        'questions': data['questions'],
+    }
+
+    result = mongo.db.assignments.update_one({'_id': ObjectId(assignment_id)}, {'$set': updated_assignment})
+
+    if result.matched_count == 0:
+        return jsonify({'error': 'Assignment not found'}), 404
+
+    return jsonify({'message': 'Assignment updated successfully'}), 200
+
 if __name__ == '__main__':
     app.run(debug=True)
