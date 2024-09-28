@@ -329,21 +329,7 @@ def save_responses(assignment_id):
         mongo.db.responses.insert_one(response_data)
         return jsonify({'message': 'Responses and files saved successfully'}), 201
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/assignments/<assignment_id>/status', methods=['GET'])
-def check_assignment_status(assignment_id):
-    user_id = request.args.get('userId')
-    if not user_id:
-        return jsonify({'error': 'User ID is required'}), 400
-    response = mongo.db.responses.find_one({
-        'assignmentId': assignment_id,
-        'userId': user_id
-    })
-    if response:
-        return jsonify({'attempted': True}), 200
-    else:
-        return jsonify({'attempted': False}), 200     
+        return jsonify({'error': str(e)}), 500  
     
 @app.route('/api/courses/students/<assignment_id>', methods=['GET'])
 def get_students_in_course(assignment_id):
@@ -415,18 +401,6 @@ def grade_assignment(assignment_id):
         {'$set': {'graded': True}}
     )
     return jsonify({'message': message}), 200
-
-@app.route('/assignments/<assignment_id>/grade-status', methods=['GET'])
-def get_grade_status(assignment_id):
-    user_id = request.args.get('userId')
-    if not user_id:
-        return jsonify({'error': 'User ID is required'}), 400
-    grade_record = mongo.db.grades.find_one({
-        'assignmentId': assignment_id,
-        'userId': user_id
-    })
-    graded = grade_record is not None and 'grades' in grade_record
-    return jsonify({'graded': graded}), 200
 
 @app.route('/assignments/status', methods=['GET'])
 def get_all_assignments_status():
