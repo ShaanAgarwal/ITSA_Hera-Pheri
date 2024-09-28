@@ -187,7 +187,79 @@ def get_course_details(course_id):
     
     return jsonify({'error': 'Course not found'}), 404
 
+@app.route('/student/<user_id>', methods=['GET'])
+def get_student_details(user_id):
+    student = mongo.db.students.find_one({'_id': ObjectId(user_id)})
+    if student:
+        return jsonify({
+            'id': str(student['_id']),
+            'studentName': student['studentName'],
+            'instituteId': student['instituteId']
+        }), 200
+    return jsonify({'error': 'Student not found'}), 404
 
+@app.route('/teachers/institute/<institute_id>', methods=['GET'])
+def get_teachers_by_institute(institute_id):
+    teachers = mongo.db.teachers.find({'instituteId': institute_id})
+    teacher_list = [{'id': str(teacher['_id']), 'teacherName': teacher['teacherName']} for teacher in teachers]
+    return jsonify(teacher_list), 200
+
+@app.route('/courses/teacher/<teacher_id>', methods=['GET'])
+def get_courses_by_teacher(teacher_id):
+    courses = mongo.db.courses.find({'teacherId': teacher_id})
+    course_list = [{'id': str(course['_id']), 'courseName': course['courseName'], 'courseDescription': course['courseDescription'], 'coursePassword': course['coursePassword']} for course in courses]
+    return jsonify(course_list), 200
+
+@app.route('/courses/enroll/<course_id>', methods=['PUT'])
+def enroll_in_course(course_id):
+    data = request.json
+    user_id = data.get('userId')
+    course_password = data.get('coursePassword')
+
+    # Validate input
+    if not user_id or not course_password:
+        return jsonify({'error': 'Invalid input'}), 400
+
+    # Find the course
+    course = mongo.db.courses.find_one({'_id': ObjectId(course_id)})
+    if not course:
+        return jsonify({'error': 'Course not found'}), 404
+
+    # Check if the provided password matches
+    if course['coursePassword'] != course_password:
+        return jsonify({'error': 'Incorrect password'}), 401
+
+    # Update the course with the new student
+    if user_id not in course.get('enrolledStudents', []):
+        mongo.db.courses.update_one({'_id': ObjectId(course_id)}, {'$push': {'enrolledStudents': user_id}})
+    
+    # Update the student with the new course
+    student = mongo.db.students.find_one({'_id': ObjectId(user_id)})
+    if student:
+        if course_id not in student.get('courseEnrollments', []):
+            mongo.db.students.update_one({'_id': ObjectId(user_id)}, {'$push': {'courseEnrollments': course_id}})
+    
+    return jsonify({'message': 'Enrollment successful'}), 200
+
+@app.route('/student/<user_id>/enrolledCourses', methods=['GET'])
+def get_enrolled_courses(user_id):
+    # Find the student by user_id
+    student = mongo.db.students.find_one({'_id': ObjectId(user_id)})
+    
+    if not student:
+        return jsonify({'error': 'Student not found'}), 404
+
+    # Get the list of enrolled course IDs
+    enrolled_course_ids = student.get('courseEnrollments', [])
+
+    if not enrolled_course_ids:
+        return jsonify([]), 200  # No courses enrolled
+
+    # Fetch course details for the enrolled courses
+    courses = mongo.db.courses.find({'_id': {'$in': [ObjectId(course_id) for course_id in enrolled_course_ids]}})
+    course_list = [{'id': str(course['_id']), 'courseName': course['courseName'], 'courseDescription': course['courseDescription']} for course in courses]
+
+    return jsonify(course_list), 200
 
 if __name__ == '__main__':
     app.run(debug=True)
