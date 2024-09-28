@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import FormRenderer from './FormRenderer'; // Make sure to import your FormRenderer component
+import FormRenderer from './FormRenderer';
 
 const CourseDetailComponent = () => {
-    const { courseId } = useParams(); // Fetching courseId from URL parameters
+    const { courseId } = useParams();
     const [course, setCourse] = useState(null);
     const [assignments, setAssignments] = useState([]);
     const [loading, setLoading] = useState(true);

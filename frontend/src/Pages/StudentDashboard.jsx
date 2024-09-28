@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import Navbar from '../components/Student/Navbar';
 import axios from 'axios';
-import { Typography, Snackbar, Alert, Grid, Paper, Divider } from '@mui/material';
+import {
+    Typography,
+    Snackbar,
+    Alert,
+    Grid,
+    Paper,
+    Divider,
+    CircularProgress,
+    Box,
+} from '@mui/material';
 import EnrolledCourses from '../components/Student/EnrolledCourses';
 import CourseDialog from '../components/Student/CourseDialog';
 import EnrollDialog from '../components/Student/EnrollDialog';
@@ -17,18 +26,22 @@ const StudentDashboard = () => {
     const [enrollPassword, setEnrollPassword] = useState('');
     const [selectedCourseId, setSelectedCourseId] = useState(null);
     const [enrollmentSuccess, setEnrollmentSuccess] = useState(false);
+    const [errorMessage, setErrorMessage] = useState('');
     const [enrolledCourses, setEnrolledCourses] = useState([]);
     const userId = localStorage.getItem('userId');
 
     useEffect(() => {
         const fetchStudentDetails = async () => {
             try {
-                const response = await axios.get(`http://localhost:5000/student/${userId}`);
-                setStudentName(response.data.studentName);
-                const instituteResponse = await axios.get(`http://localhost:5000/institutes/${response.data.instituteId}`);
+                const studentResponse = await axios.get(`http://localhost:5000/student/${userId}`);
+                setStudentName(studentResponse.data.studentName);
+
+                const instituteResponse = await axios.get(`http://localhost:5000/institutes/${studentResponse.data.instituteId}`);
                 setInstituteName(instituteResponse.data.instituteName);
-                const teachersResponse = await axios.get(`http://localhost:5000/teachers/institute/${response.data.instituteId}`);
+
+                const teachersResponse = await axios.get(`http://localhost:5000/teachers/institute/${studentResponse.data.instituteId}`);
                 setTeachers(teachersResponse.data);
+
                 const coursesResponse = await axios.get(`http://localhost:5000/student/${userId}/enrolledCourses`);
                 setEnrolledCourses(coursesResponse.data);
             } catch (error) {
@@ -37,6 +50,7 @@ const StudentDashboard = () => {
                 setLoading(false);
             }
         };
+
         fetchStudentDetails();
     }, [userId]);
 
@@ -60,15 +74,17 @@ const StudentDashboard = () => {
         setCourses([]);
         setEnrollPassword('');
         setSelectedCourseId(null);
+        setErrorMessage(''); // Reset error message on close
     };
 
     const handleEnrollClick = (courseId) => {
         setSelectedCourseId(courseId);
+        setErrorMessage(''); // Reset error message on new enroll
     };
 
     const handleEnroll = async () => {
         if (!enrollPassword || !selectedCourseId) {
-            alert("Please enter the password and select a course.");
+            setErrorMessage("Please enter the password and select a course.");
             return;
         }
         try {
@@ -84,12 +100,16 @@ const StudentDashboard = () => {
             }
         } catch (error) {
             console.error('Error enrolling in course:', error);
-            alert(error.response?.data?.error || 'An error occurred while enrolling in the course.');
+            setErrorMessage(error.response?.data?.error || 'An error occurred while enrolling in the course.');
         }
     };
 
     if (loading) {
-        return <div>Loading...</div>;
+        return (
+            <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+                <CircularProgress />
+            </Box>
+        );
     }
 
     return (
@@ -99,27 +119,39 @@ const StudentDashboard = () => {
                 studentName={studentName} 
                 onLogout={handleLogout} 
             />
-            <Grid container spacing={2} sx={{ padding: 2, height: 'calc(100vh - 64px)' }}>
+            <Box sx={{ padding: 2 }}>
+                {errorMessage && (
+                    <Alert severity="error" onClose={() => setErrorMessage('')} sx={{ marginBottom: 2 }}>
+                        {errorMessage}
+                    </Alert>
+                )}
+            </Box>
+            <Grid container spacing={2} sx={{ height: 'calc(100vh - 64px)' }}>
                 <Grid item xs={12} md={4} sx={{ display: 'flex', flexDirection: 'column' }}>
                     <Paper elevation={3} sx={{ padding: 2, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>Enrolled Courses</Typography>
+                        <Typography variant="h5" sx={{ fontWeight: 'bold', marginBottom: 1 }}>Enrolled Courses</Typography>
                         <Divider sx={{ marginY: 1 }} />
-                        <div style={{ flex: 1, overflowY: 'auto' }}>
+                        <Box sx={{ flex: 1, overflowY: 'auto' }}>
                             <EnrolledCourses enrolledCourses={enrolledCourses} />
-                        </div>
+                        </Box>
                     </Paper>
                 </Grid>
                 <Grid item xs={12} md={8} sx={{ display: 'flex', flexDirection: 'column' }}>
                     <Paper elevation={3} sx={{ padding: 2, flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <Typography variant="h5" sx={{ fontWeight: 'bold' }}>Teachers in Your Institute</Typography>
+                        <Typography variant="h5" sx={{ fontWeight: 'bold', marginBottom: 1 }}>Teachers in Your Institute</Typography>
                         <Divider sx={{ marginY: 1 }} />
-                        <div style={{ flex: 1, overflowY: 'auto' }}>
+                        <Box sx={{ flex: 1, overflowY: 'auto' }}>
                             <TeacherList teachers={teachers} onTeacherClick={handleTeacherClick} />
-                        </div>
+                        </Box>
                     </Paper>
                 </Grid>
             </Grid>
-            <CourseDialog open={Boolean(selectedTeacher)} onClose={handleClose} courses={courses} onEnrollClick={handleEnrollClick} />
+            <CourseDialog 
+                open={Boolean(selectedTeacher)} 
+                onClose={handleClose} 
+                courses={courses} 
+                onEnrollClick={handleEnrollClick} 
+            />
             <EnrollDialog 
                 open={Boolean(selectedCourseId)} 
                 onClose={() => setSelectedCourseId(null)} 
