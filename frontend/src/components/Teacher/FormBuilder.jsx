@@ -4,8 +4,6 @@ import {
     Button,
     TextField,
     MenuItem,
-    FormControlLabel,
-    Checkbox,
     Typography,
     IconButton,
     List,
@@ -34,15 +32,29 @@ const FormBuilder = ({ courseId }) => {
     const [deadlineTime, setDeadlineTime] = useState(dayjs());
 
     const handleAddQuestion = () => {
-        setQuestions([...questions, { id: Date.now(), type: "short", text: "", allowFileUpload: false, options: [], maxMarks: 0, predefinedAnswer: "" }]);
+        setQuestions([...questions, { id: Date.now(), type: "short", text: "", options: [], maxMarks: 0, predefinedAnswer: "", files: [] }]);
     };
 
     const handleQuestionChange = (id, field, value) => {
         setQuestions((prev) => prev.map((q) => (q.id === id ? { ...q, [field]: value } : q)));
     };
 
+    const handleFileChange = (id, files) => {
+        setQuestions((prev) => {
+            const question = prev.find(q => q.id === id);
+            return prev.map((q) => (q.id === id ? { ...q, files: [...question.files, ...Array.from(files)] } : q));
+        });
+    };
+
     const handleDeleteQuestion = (id) => {
         setQuestions((prev) => prev.filter((q) => q.id !== id));
+    };
+
+    const handleDeleteFile = (questionId, fileName) => {
+        setQuestions((prev) => {
+            const question = prev.find(q => q.id === questionId);
+            return prev.map((q) => (q.id === questionId ? { ...q, files: question.files.filter(file => file.name !== fileName) } : q));
+        });
     };
 
     const handleAddOption = (questionId) => {
@@ -92,19 +104,38 @@ const FormBuilder = ({ courseId }) => {
     };
 
     const handleCreateAssignment = async () => {
-        const assignmentData = { title: assignmentName, questions, deadline: { date: deadlineDate, time: deadlineTime } };
-        console.log(assignmentData);
+        const formData = new FormData();
+        const assignmentData = {
+            title: assignmentName,
+            questions: questions.map(({ files, ...rest }) => ({ ...rest })),
+            deadline: { date: deadlineDate, time: deadlineTime }
+        };
+    
+        formData.append("assignment", JSON.stringify(assignmentData));
+    
+        // Append each file organized by question ID
+        questions.forEach((question) => {
+            question.files.forEach((file) => {
+                console.log(`Appending file for question ID ${question.id}:`, file);
+                formData.append(`files[${question.id}]`, file);
+            });
+        });
+    
         try {
-            const response = await axios.post(`http://localhost:5000/upload-assignment/${courseId}`, assignmentData);
+            const response = await axios.post(`http://localhost:5000/upload-assignment/${courseId}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
             console.log('Assignment created:', response.data);
             setAssignmentName('');
             setQuestions([]);
             setDeadlineDate(dayjs());
             setDeadlineTime(dayjs());
         } catch (error) {
-            console.error('Error creating assignment:', error);
+            console.error('Error creating assignment:', error.response.data);
         }
-    };
+    };    
 
     return (
         <Container>
@@ -176,15 +207,31 @@ const FormBuilder = ({ courseId }) => {
                                 fullWidth
                                 margin="normal"
                             />
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        checked={question.allowFileUpload}
-                                        onChange={(e) => handleQuestionChange(question.id, "allowFileUpload", e.target.checked)}
-                                    />
-                                }
-                                label="Allow file upload"
-                            />
+                            {/* File upload for each question */}
+                            <Box mt={2}>
+                                <input
+                                    type="file"
+                                    multiple
+                                    onChange={(e) => handleFileChange(question.id, e.target.files)}
+                                />
+                                <Typography variant="caption" color="textSecondary">
+                                    {question.files.length > 0 
+                                        ? `Uploaded: ${question.files.map(file => file.name).join(", ")}`
+                                        : "No files uploaded"}
+                                </Typography>
+                                <List>
+                                    {question.files.map((file) => (
+                                        <ListItem key={file.name}>
+                                            <Typography variant="body2">{file.name}</Typography>
+                                            <ListItemSecondaryAction>
+                                                <IconButton edge="end" color="error" onClick={() => handleDeleteFile(question.id, file.name)}>
+                                                    <DeleteIcon />
+                                                </IconButton>
+                                            </ListItemSecondaryAction>
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Box>
                             {question.type === "mcq" && (
                                 <>
                                     <TextField

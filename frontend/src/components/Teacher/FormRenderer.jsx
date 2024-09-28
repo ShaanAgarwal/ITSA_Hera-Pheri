@@ -4,17 +4,14 @@ import {
     Button,
     TextField,
     Typography,
-    RadioGroup,
-    Radio,
-    FormControlLabel,
-    FormControl,
     Alert,
-    Paper
+    Paper,
+    Link,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import axios from "axios";
 
-const FormRenderer = ({ assignmentId, userId, initialResponses }) => {
+const FormRenderer = ({ assignmentId, userId, initialResponses, initialFilePaths }) => {
     const [form, setForm] = useState(null);
     const [responses, setResponses] = useState(initialResponses);
     const [grades, setGrades] = useState({});
@@ -99,16 +96,65 @@ const FormRenderer = ({ assignmentId, userId, initialResponses }) => {
                                 {question.maxMarks && <span> (Max Marks: {question.maxMarks})</span>}
                             </Typography>
 
+                            {/* Displaying student's response */}
                             <Typography variant="body2">
                                 <strong>Your Response:</strong> {responses[question.id] || "No response"}
                             </Typography>
 
+                            {/* Display predefined answer */}
                             {question.predefinedAnswer && (
                                 <Typography variant="body2" sx={{ color: 'gray' }}>
                                     <strong>Predefined Answer:</strong> {question.predefinedAnswer}
                                 </Typography>
                             )}
 
+                            {/* Display uploaded files for the question */}
+                            {form.file_paths && form.file_paths[question.id] && 
+                                form.file_paths[question.id].length > 0 && (
+                                <Box mt={2}>
+                                    <Typography variant="body2">
+                                        <strong>Question Files:</strong>
+                                    </Typography>
+                                    {form.file_paths[question.id].map((filePath, idx) => (
+                                        <Link
+                                            key={idx}
+                                            href={`http://localhost:5000/${filePath}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            download
+                                        >
+                                            <Button variant="outlined" sx={{ mt: 1, mr: 1 }}>
+                                                Download Question File {idx + 1}
+                                            </Button>
+                                        </Link>
+                                    ))}
+                                </Box>
+                            )}
+
+                            {/* Display uploaded files for the student's response */}
+                            {initialFilePaths && initialFilePaths[`files[${question.id}]`] && 
+                                initialFilePaths[`files[${question.id}]`].length > 0 && (
+                                <Box mt={2}>
+                                    <Typography variant="body2">
+                                        <strong>Uploaded Files:</strong>
+                                    </Typography>
+                                    {initialFilePaths[`files[${question.id}]`].map((filePath, idx) => (
+                                        <Link
+                                            key={idx}
+                                            href={`http://localhost:5000/${filePath}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            download
+                                        >
+                                            <Button variant="outlined" sx={{ mt: 1, mr: 1 }}>
+                                                Download Uploaded File {idx + 1}
+                                            </Button>
+                                        </Link>
+                                    ))}
+                                </Box>
+                            )}
+
+                            {/* Displaying grade input */}
                             <TextField
                                 variant="outlined"
                                 fullWidth

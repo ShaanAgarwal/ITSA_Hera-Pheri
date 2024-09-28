@@ -12,13 +12,14 @@ import {
     Button
 } from '@mui/material';
 import { useParams } from 'react-router-dom';
-import FormRenderer from './FormRenderer'; // Make sure to import your FormRenderer component
+import FormRenderer from './FormRenderer';
 
 const AssignmentDetails = () => {
     const [students, setStudents] = useState([]);
     const [open, setOpen] = useState(false);
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [responses, setResponses] = useState({});
+    const [filePaths, setFilePaths] = useState({});
     const { assignmentId } = useParams();
 
     useEffect(() => {
@@ -46,10 +47,11 @@ const AssignmentDetails = () => {
 
     const handleOpen = async (student) => {
         setSelectedStudent(student);
-        // Fetch responses for the selected student
         try {
             const responseRes = await axios.get(`http://localhost:5000/assignment/responses/${assignmentId}/${student._id}`);
-            setResponses(responseRes.data.responses || {});
+            const parsedResponses = JSON.parse(responseRes.data.responses || '{}');
+            setResponses(parsedResponses);
+            setFilePaths(responseRes.data.file_paths || {});
         } catch (error) {
             console.error('Error fetching responses:', error);
         }
@@ -58,7 +60,8 @@ const AssignmentDetails = () => {
 
     const handleClose = () => {
         setOpen(false);
-        setResponses({}); // Clear responses when closing
+        setResponses({});
+        setFilePaths({});
     };
 
     if (!students.length) return <div>Loading...</div>;
@@ -71,7 +74,7 @@ const AssignmentDetails = () => {
                     <ListItem
                         key={student._id}
                         style={{ color: student.hasAttempted ? 'green' : 'red' }}
-                        onClick={() => handleOpen(student)} // Open modal on click
+                        onClick={() => handleOpen(student)}
                     >
                         {student.studentName}
                     </ListItem>
@@ -79,10 +82,15 @@ const AssignmentDetails = () => {
             </List>
 
             <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
-                <DialogTitle>{selectedStudent ? selectedStudent.studentName : ''}'s Responses</DialogTitle>
+                <DialogTitle>{selectedStudent ? `${selectedStudent.studentName}'s Responses` : ''}</DialogTitle>
                 <DialogContent>
                     {selectedStudent && (
-                        <FormRenderer assignmentId={assignmentId} userId={selectedStudent._id} initialResponses={responses} />
+                        <FormRenderer
+                            assignmentId={assignmentId}
+                            userId={selectedStudent._id}
+                            initialResponses={responses}
+                            initialFilePaths={filePaths}
+                        />
                     )}
                 </DialogContent>
                 <DialogActions>
