@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Container, Grid, Typography, Box, AppBar, Toolbar, IconButton } from '@mui/material';
+import { Container, Typography, Box, AppBar, Toolbar, IconButton } from '@mui/material';
 import CourseDetail from './CourseDetailsComponents/CourseDetail';
 import AssignmentList from './CourseDetailsComponents/AssignmentList';
 import AssignmentModal from './CourseDetailsComponents/AssignmentModal';
@@ -22,6 +22,7 @@ const CourseDetailComponent = () => {
             try {
                 const courseResponse = await axios.get(`http://localhost:5000/course/${courseId}`);
                 setCourse(courseResponse.data);
+                
                 const assignmentsResponse = await axios.get(`http://localhost:5000/course/${courseId}/assignments`);
                 setAssignments(assignmentsResponse.data);
             } catch (error) {
@@ -62,18 +63,17 @@ const CourseDetailComponent = () => {
 
             <Box sx={{ padding: 3 }}>
                 {course && <CourseDetail course={course} />}
-                
                 <Typography variant="h5" sx={{ marginY: 2 }}>
                     Assignments
                 </Typography>
                 <AssignmentList assignments={assignments} onAssignmentClick={handleAssignmentClick} />
             </Box>
 
-            <AssignmentModal 
-                open={isModalOpen} 
-                onClose={closeModal} 
-                assignmentTitle={assignments.find(a => a.id === selectedAssignmentId)?.title} 
-                assignmentId={selectedAssignmentId} 
+            <AssignmentModal
+                open={isModalOpen}
+                onClose={closeModal}
+                assignmentTitle={assignments.find(a => a.id === selectedAssignmentId)?.title}
+                assignmentId={selectedAssignmentId}
             />
         </Container>
     );

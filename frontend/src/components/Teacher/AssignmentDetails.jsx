@@ -35,10 +35,18 @@ const AssignmentDetails = () => {
                 const attemptedRes = await axios.get(`http://localhost:5000/api/assignments/attempted/students/${assignmentId}`);
                 const attemptedStudentIds = attemptedRes.data.attemptedStudentIds;
 
-                const combinedStudents = enrolledStudents.map(student => ({
-                    ...student,
-                    hasAttempted: attemptedStudentIds.includes(student._id)
-                }));
+                const gradingRes = await axios.get(`http://localhost:5000/api/assignment/grade/${assignmentId}`);
+                const gradesData = gradingRes.data;
+
+                const combinedStudents = enrolledStudents.map(student => {
+                    const studentGrades = gradesData[student._id] || {};
+                    const totalGrade = Object.values(studentGrades).reduce((acc, grade) => acc + parseFloat(grade), 0);
+                    return {
+                        ...student,
+                        hasAttempted: attemptedStudentIds.includes(student._id),
+                        totalGrade: studentGrades && Object.keys(studentGrades).length > 0 ? totalGrade : 'N/A',
+                    };
+                });
 
                 setStudents(combinedStudents);
             } catch (error) {
@@ -53,7 +61,7 @@ const AssignmentDetails = () => {
         setSelectedStudent(student);
         try {
             const responseRes = await axios.get(`http://localhost:5000/assignment/responses/${assignmentId}/${student._id}`);
-            const parsedResponses = JSON.parse(responseRes.data.responses || '{}');
+            const parsedResponses = responseRes.data.responses;
             setResponses(parsedResponses);
             setFilePaths(responseRes.data.file_paths || {});
         } catch (error) {
@@ -104,7 +112,9 @@ const AssignmentDetails = () => {
                                     {student.studentName}
                                 </Typography>
                                 <Typography variant="body2" color="textSecondary">
-                                    {student.hasAttempted ? 'Attempted' : 'Not Attempted'}
+                                    {student.hasAttempted ? 'Attempted' : 'Not Attempted'} 
+                                    <br />
+                                    {student.totalGrade ? `Total Marks: ${student.totalGrade}` : 'Marks: N/A'}
                                 </Typography>
                             </CardContent>
                         </Card>

@@ -363,6 +363,8 @@ def get_student_responses(assignment_id, user_id):
         'assignmentId': assignment_id,
         'userId': user_id
     })
+    print(assignment_id)
+    print(user_id)
     if not responses:
         return jsonify({'error': 'No responses found'}), 404
     responses['_id'] = str(responses['_id'])
@@ -424,6 +426,40 @@ def get_all_assignments_status():
             'graded': graded
         })
     return jsonify(statuses), 200
+
+@app.route('/api/assignment/grade/<assignment_id>', methods=['GET'])
+def get_grades(assignment_id):
+    try:
+        grades_records = mongo.db.grades.find({"assignmentId": assignment_id})
+        if grades_records is None:
+            return jsonify({"message": "No grades found for this assignment."}), 404
+        user_grades = {}
+        for record in grades_records:
+            user_id = record.get("userId")
+            grades = record.get("grades", {})
+            if user_id:
+                user_grades[user_id] = grades
+        print(user_grades)
+        return jsonify(user_grades), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route('/api/assignment/grades', methods=['GET'])
+def get_assignment_grades():
+    user_id = request.args.get('userId')
+    assignment_id = request.args.get('assignmentId')
+
+    # Fetch the grades from the database
+    grades_record = mongo.db.grades.find_one({
+        "assignmentId": assignment_id,
+        "userId": user_id
+    })
+    print(grades_record)
+
+    if not grades_record:
+        return jsonify({"message": "No grades found for this assignment."}), 404
+    
+    return jsonify(grades_record['grades']), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -9,9 +9,6 @@ const AssignmentList = ({ assignments, onAssignmentClick }) => {
     const { courseId } = useParams();
 
     useEffect(() => {
-    }, [assignments]);
-
-    useEffect(() => {
         const fetchStatuses = async () => {
             try {
                 const response = await axios.get(`http://localhost:5000/assignments/status`, {
@@ -70,7 +67,8 @@ const AssignmentList = ({ assignments, onAssignmentClick }) => {
                             <React.Fragment key={assignmentId}>
                                 <ListItem
                                     onClick={() => {
-                                        if (!status.attempted && !status.graded) {
+                                        // Allow click if graded or not attempted
+                                        if (status.graded || !status.attempted) {
                                             onAssignmentClick(assignmentId);
                                         }
                                     }}
@@ -78,7 +76,7 @@ const AssignmentList = ({ assignments, onAssignmentClick }) => {
                                         padding: 1,
                                         borderRadius: 1,
                                         backgroundColor: backgroundColor,
-                                        '&:hover': !status.attempted && !status.graded && {
+                                        '&:hover': (status.graded || !status.attempted) && {
                                             backgroundColor: '#f5f5f5',
                                             cursor: 'pointer',
                                         },

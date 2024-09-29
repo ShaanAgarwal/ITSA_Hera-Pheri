@@ -41,6 +41,23 @@ const FormRenderer = ({ assignmentId, userId, initialResponses, initialFilePaths
         setResponses(initialResponses);
     }, [initialResponses]);
 
+    useEffect(() => {
+        const fetchGrades = async () => {
+            try {
+                const response = await axios.get(`http://localhost:5000/api/assignment/grade/${assignmentId}`);
+                const userGrades = response.data[userId]; // Get grades for this specific user
+                if (userGrades) {
+                    setGrades(userGrades); // Fill grades state with existing grades
+                }
+            } catch (err) {
+                console.error("Error fetching grades:", err);
+                setError("Failed to load grades.");
+            }
+        };
+
+        fetchGrades();
+    }, [assignmentId, userId]);
+
     const handleGradeChange = (questionId, value) => {
         setGrades((prev) => ({ ...prev, [questionId]: value }));
     };
@@ -96,19 +113,16 @@ const FormRenderer = ({ assignmentId, userId, initialResponses, initialFilePaths
                                 {question.maxMarks && <span> (Max Marks: {question.maxMarks})</span>}
                             </Typography>
 
-                            {/* Displaying student's response */}
                             <Typography variant="body2">
                                 <strong>Your Response:</strong> {responses[question.id] || "No response"}
                             </Typography>
 
-                            {/* Display predefined answer */}
                             {question.predefinedAnswer && (
                                 <Typography variant="body2" sx={{ color: 'gray' }}>
                                     <strong>Predefined Answer:</strong> {question.predefinedAnswer}
                                 </Typography>
                             )}
 
-                            {/* Display uploaded files for the question */}
                             {form.file_paths && form.file_paths[question.id] && 
                                 form.file_paths[question.id].length > 0 && (
                                 <Box mt={2}>
@@ -131,7 +145,6 @@ const FormRenderer = ({ assignmentId, userId, initialResponses, initialFilePaths
                                 </Box>
                             )}
 
-                            {/* Display uploaded files for the student's response */}
                             {initialFilePaths && initialFilePaths[`files[${question.id}]`] && 
                                 initialFilePaths[`files[${question.id}]`].length > 0 && (
                                 <Box mt={2}>
@@ -154,12 +167,11 @@ const FormRenderer = ({ assignmentId, userId, initialResponses, initialFilePaths
                                 </Box>
                             )}
 
-                            {/* Displaying grade input */}
                             <TextField
                                 variant="outlined"
                                 fullWidth
                                 margin="normal"
-                                value={grades[question.id] || ""}
+                                value={grades[question.id] || ""} // Use the grades state for initial value
                                 onChange={(e) => handleGradeChange(question.id, e.target.value)}
                                 placeholder="Grade"
                                 type="number"
