@@ -74,12 +74,12 @@ const StudentDashboard = () => {
         setCourses([]);
         setEnrollPassword('');
         setSelectedCourseId(null);
-        setErrorMessage(''); // Reset error message on close
+        setErrorMessage('');
     };
 
     const handleEnrollClick = (courseId) => {
         setSelectedCourseId(courseId);
-        setErrorMessage(''); // Reset error message on new enroll
+        setErrorMessage('');
     };
 
     const handleEnroll = async () => {

@@ -15,10 +15,9 @@ const UploadExcel = ({ type, onClose }) => {
         if (openSnackbar && snackbarSeverity === 'success') {
             timer = setTimeout(() => {
                 setOpenSnackbar(false);
-                onClose(); // Close the dialog after the message is shown
+                onClose();
             }, 5000);
         } else if (openSnackbar && snackbarSeverity === 'error') {
-            // If it's an error, close the snackbar manually after clicking
             setTimeout(() => {
                 setOpenSnackbar(false);
             }, 6000);
@@ -64,8 +63,6 @@ const UploadExcel = ({ type, onClose }) => {
                 setSnackbarMessage(`${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully`);
                 setSnackbarSeverity('success');
                 setOpenSnackbar(true);
-                // Close the dialog after successful upload
-                // The dialog will close after 5 seconds via useEffect
             } catch (error) {
                 console.error('Upload error:', error);
                 setSnackbarMessage('Error uploading data. Please try again.');
@@ -73,7 +70,7 @@ const UploadExcel = ({ type, onClose }) => {
                 setOpenSnackbar(true);
             } finally {
                 setLoading(false);
-                setFile(null); // Clear the file after upload
+                setFile(null); 
             }
         };
 

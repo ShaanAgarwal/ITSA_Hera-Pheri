@@ -10,7 +10,7 @@ const AssignmentModal = ({ open, onClose, assignmentTitle, assignmentId }) => {
                 borderRadius: 2,
                 boxShadow: 24,
                 p: 4,
-                width: '1000px', // Increased width
+                width: '1000px', 
                 maxHeight: '80vh',
                 overflowY: 'auto',
             }}>

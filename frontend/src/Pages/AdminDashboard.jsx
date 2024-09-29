@@ -5,7 +5,6 @@ import Sidebar from '../components/Admin/Sidebar';
 import axios from 'axios';
 import { styled } from '@mui/material/styles';
 
-// Styled components
 const MainContent = styled(Box)(({ theme }) => ({
   flexGrow: 1,
   padding: theme.spacing(3),

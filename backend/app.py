@@ -363,8 +363,6 @@ def get_student_responses(assignment_id, user_id):
         'assignmentId': assignment_id,
         'userId': user_id
     })
-    print(assignment_id)
-    print(user_id)
     if not responses:
         return jsonify({'error': 'No responses found'}), 404
     responses['_id'] = str(responses['_id'])
@@ -439,7 +437,6 @@ def get_grades(assignment_id):
             grades = record.get("grades", {})
             if user_id:
                 user_grades[user_id] = grades
-        print(user_grades)
         return jsonify(user_grades), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -448,18 +445,25 @@ def get_grades(assignment_id):
 def get_assignment_grades():
     user_id = request.args.get('userId')
     assignment_id = request.args.get('assignmentId')
-
-    # Fetch the grades from the database
     grades_record = mongo.db.grades.find_one({
         "assignmentId": assignment_id,
         "userId": user_id
     })
-    print(grades_record)
-
     if not grades_record:
         return jsonify({"message": "No grades found for this assignment."}), 404
-    
     return jsonify(grades_record['grades']), 200
+
+@app.route('/institute/<institute_id>/teachers', methods=['GET'])
+def get_teachers_for_institute(institute_id):
+    teachers = mongo.db.teachers.find({'instituteId': institute_id})
+    teacher_list = [{'id': str(teacher['_id']), 'teacherName': teacher['teacherName']} for teacher in teachers]
+    return jsonify(teacher_list), 200
+
+@app.route('/institute/<institute_id>/students', methods=['GET'])
+def get_students_for_institute(institute_id):
+    students = mongo.db.students.find({'instituteId': institute_id})
+    student_list = [{'id': str(student['_id']), 'studentName': student['studentName']} for student in students]
+    return jsonify(student_list), 200
 
 if __name__ == '__main__':
     app.run(debug=True)

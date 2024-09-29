@@ -67,7 +67,6 @@ const AssignmentList = ({ assignments, onAssignmentClick }) => {
                             <React.Fragment key={assignmentId}>
                                 <ListItem
                                     onClick={() => {
-                                        // Allow click if graded or not attempted
                                         if (status.graded || !status.attempted) {
                                             onAssignmentClick(assignmentId);
                                         }

@@ -45,9 +45,9 @@ const FormRenderer = ({ assignmentId, userId, initialResponses, initialFilePaths
         const fetchGrades = async () => {
             try {
                 const response = await axios.get(`http://localhost:5000/api/assignment/grade/${assignmentId}`);
-                const userGrades = response.data[userId]; // Get grades for this specific user
+                const userGrades = response.data[userId];
                 if (userGrades) {
-                    setGrades(userGrades); // Fill grades state with existing grades
+                    setGrades(userGrades);
                 }
             } catch (err) {
                 console.error("Error fetching grades:", err);
@@ -171,7 +171,7 @@ const FormRenderer = ({ assignmentId, userId, initialResponses, initialFilePaths
                                 variant="outlined"
                                 fullWidth
                                 margin="normal"
-                                value={grades[question.id] || ""} // Use the grades state for initial value
+                                value={grades[question.id] || ""} 
                                 onChange={(e) => handleGradeChange(question.id, e.target.value)}
                                 placeholder="Grade"
                                 type="number"
