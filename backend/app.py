@@ -481,46 +481,32 @@ def get_students_by_course(course_id):
 
 @app.route('/course/<course_id>/students/assignments', methods=['GET'])
 def get_students_assignments_and_grades(course_id):
-    # Fetch students enrolled in the course
     students = list(mongo.db.students.find({"courseEnrollments": course_id}))
-    
-    # Fetch assignments for the course
     assignments = list(mongo.db.assignments.find({"courseId": course_id}))
-
     student_details = []
-    
     for student in students:
         student_data = {
             'id': str(student['_id']),
             'studentName': student['studentName'],
             'assignments': []
         }
-        
         for assignment in assignments:
-            # Fetch grades for the student for the specific assignment
             grade_record = mongo.db.grades.find_one({
                 'assignmentId': str(assignment['_id']),
                 'userId': str(student['_id'])
             })
-            
             total_grade = 0
-            
             if grade_record:
-                # Calculate total grade by summing the values in the grades object
                 total_grade = sum(int(mark) for mark in grade_record['grades'].values())
-                
-                if total_grade > 0:  # Only add if there's a grade
+                if total_grade > 0:
                     assignment_data = {
                         'assignmentId': str(assignment['_id']),
                         'title': assignment['title'],
                         'totalGrade': total_grade
                     }
                     student_data['assignments'].append(assignment_data)
-        
-        # Only add student data if they have assignments
         if student_data['assignments']:
             student_details.append(student_data)
-    
     return jsonify(student_details), 200
 
 if __name__ == '__main__':

@@ -11,7 +11,7 @@ const AssignmentList = ({ assignments }) => {
                     <ListItem 
                         key={assignment.id} 
                         component={Link} 
-                        to={`/assignments/${assignment.id}`} // Adjust the path as needed
+                        to={`/assignments/${assignment.id}`}
                         sx={{
                             textDecoration: 'none',
                             color: 'inherit',

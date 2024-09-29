@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import MuiAlert from '@mui/material/Alert';
 import AssignmentList from './AssignmentList';
 import AddAssignmentDialog from './AddAssignmentDialog';
-import GradesDialog from './GradesDialog'; // Import the new component
+import GradesDialog from './GradesDialog';
 import axios from 'axios';
 import {
     Box,
@@ -19,13 +19,11 @@ import {
     DialogActions,
     List,
     ListItem,
-    Divider, // <-- Added this line
+    Divider,
     IconButton,
     Grid,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-
-// ... rest of your component code
 
 const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
