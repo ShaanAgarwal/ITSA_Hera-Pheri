@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
 import { useParams } from 'react-router-dom';
+import MuiAlert from '@mui/material/Alert';
+import AssignmentList from './AssignmentList';
+import AddAssignmentDialog from './AddAssignmentDialog';
+import GradesDialog from './GradesDialog'; // Import the new component
+import axios from 'axios';
 import {
     Box,
     Typography,
@@ -15,14 +19,13 @@ import {
     DialogActions,
     List,
     ListItem,
-    Divider,
+    Divider, // <-- Added this line
     IconButton,
     Grid,
 } from '@mui/material';
-import MuiAlert from '@mui/material/Alert';
-import AssignmentList from './AssignmentList';
-import AddAssignmentDialog from './AddAssignmentDialog';
 import CloseIcon from '@mui/icons-material/Close';
+
+// ... rest of your component code
 
 const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -36,8 +39,10 @@ const CourseDetails = () => {
     const [loading, setLoading] = useState(true);
     const [openDialog, setOpenDialog] = useState(false);
     const [studentDialogOpen, setStudentDialogOpen] = useState(false);
+    const [gradesDialogOpen, setGradesDialogOpen] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
+    const [gradesData, setGradesData] = useState([]);
 
     useEffect(() => {
         const fetchCourseDetails = async () => {
@@ -90,6 +95,22 @@ const CourseDetails = () => {
 
     const handleStudentDialogClose = () => setStudentDialogOpen(false);
 
+    const fetchGrades = async () => {
+        try {
+            const response = await axios.get(`http://localhost:5000/course/${courseId}/students/assignments`);
+            setGradesData(response.data);
+        } catch (error) {
+            console.error('Error fetching grades:', error);
+        }
+    };
+
+    const handleGradesDialogOpen = () => {
+        fetchGrades();
+        setGradesDialogOpen(true);
+    };
+
+    const handleGradesDialogClose = () => setGradesDialogOpen(false);
+
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -114,14 +135,19 @@ const CourseDetails = () => {
                         <strong>Password:</strong> {courseDetails.coursePassword}
                     </Typography>
                     <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
+                        <Grid item xs={12} sm={4}>
                             <Button variant="contained" color="primary" onClick={handleOpenDialog} fullWidth>
                                 Add Assignment
                             </Button>
                         </Grid>
-                        <Grid item xs={12} sm={6}>
+                        <Grid item xs={12} sm={4}>
                             <Button variant="outlined" color="secondary" onClick={handleStudentDialogOpen} fullWidth>
                                 View Enrolled Students
+                            </Button>
+                        </Grid>
+                        <Grid item xs={12} sm={4}>
+                            <Button variant="outlined" color="success" onClick={handleGradesDialogOpen} fullWidth>
+                                View Overall Grades
                             </Button>
                         </Grid>
                     </Grid>
@@ -167,6 +193,12 @@ const CourseDetails = () => {
                     <Button onClick={handleStudentDialogClose} color="primary">Close</Button>
                 </DialogActions>
             </Dialog>
+
+            <GradesDialog 
+                open={gradesDialogOpen} 
+                onClose={handleGradesDialogClose} 
+                gradesData={gradesData} 
+            />
 
             <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
                 <Alert onClose={() => setSnackbarOpen(false)} severity="success">
