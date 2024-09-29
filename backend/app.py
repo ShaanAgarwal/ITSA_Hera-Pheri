@@ -465,5 +465,19 @@ def get_students_for_institute(institute_id):
     student_list = [{'id': str(student['_id']), 'studentName': student['studentName']} for student in students]
     return jsonify(student_list), 200
 
+@app.route('/course/<course_id>/students', methods=['GET'])
+def get_students_by_course(course_id):
+    students = mongo.db.students.find({"courseEnrollments": course_id})
+    students_list = []
+    for student in students:
+        student_data = {
+            "_id": str(student["_id"]),
+            "studentName": student["studentName"],
+            "studentUsername": student["studentUsername"],
+            "instituteId": student["instituteId"],
+        }
+        students_list.append(student_data)    
+    return jsonify(students_list)
+
 if __name__ == '__main__':
     app.run(debug=True)

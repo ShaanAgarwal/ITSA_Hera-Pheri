@@ -1,10 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useParams } from 'react-router-dom';
-import { Box, Typography, Button, Snackbar, CircularProgress, Grid, Card, CardContent } from '@mui/material';
+import {
+    Box,
+    Typography,
+    Button,
+    Snackbar,
+    CircularProgress,
+    Card,
+    CardContent,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    List,
+    ListItem,
+    Divider,
+    IconButton,
+    Grid,
+} from '@mui/material';
 import MuiAlert from '@mui/material/Alert';
 import AssignmentList from './AssignmentList';
 import AddAssignmentDialog from './AddAssignmentDialog';
+import CloseIcon from '@mui/icons-material/Close';
 
 const Alert = React.forwardRef(function Alert(props, ref) {
     return <MuiAlert elevation={6} ref={ref} variant="filled" {...props} />;
@@ -14,8 +32,10 @@ const CourseDetails = () => {
     const { courseId } = useParams();
     const [courseDetails, setCourseDetails] = useState(null);
     const [assignments, setAssignments] = useState([]);
+    const [students, setStudents] = useState([]);
     const [loading, setLoading] = useState(true);
     const [openDialog, setOpenDialog] = useState(false);
+    const [studentDialogOpen, setStudentDialogOpen] = useState(false);
     const [snackbarOpen, setSnackbarOpen] = useState(false);
     const [snackbarMessage, setSnackbarMessage] = useState('');
 
@@ -54,6 +74,22 @@ const CourseDetails = () => {
         handleCloseDialog();
     };
 
+    const fetchStudents = async () => {
+        try {
+            const response = await axios.get(`http://localhost:5000/course/${courseId}/students`);
+            setStudents(response.data);
+        } catch (error) {
+            console.error('Error fetching students:', error);
+        }
+    };
+
+    const handleStudentDialogOpen = () => {
+        fetchStudents();
+        setStudentDialogOpen(true);
+    };
+
+    const handleStudentDialogClose = () => setStudentDialogOpen(false);
+
     if (loading) {
         return (
             <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
@@ -71,19 +107,24 @@ const CourseDetails = () => {
             <Card sx={{ mb: 3 }}>
                 <CardContent>
                     <Typography variant="h4" gutterBottom>{courseDetails.courseName}</Typography>
+                    <Divider sx={{ mb: 2 }} />
                     <Typography variant="h6" color="text.secondary">Description:</Typography>
                     <Typography variant="body1" sx={{ marginBottom: 2 }}>{courseDetails.courseDescription}</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ marginBottom: 2 }}>
                         <strong>Password:</strong> {courseDetails.coursePassword}
                     </Typography>
-                    <Button 
-                        variant="contained" 
-                        color="primary" 
-                        onClick={handleOpenDialog} 
-                        sx={{ mb: 2 }}
-                    >
-                        Add Assignment
-                    </Button>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} sm={6}>
+                            <Button variant="contained" color="primary" onClick={handleOpenDialog} fullWidth>
+                                Add Assignment
+                            </Button>
+                        </Grid>
+                        <Grid item xs={12} sm={6}>
+                            <Button variant="outlined" color="secondary" onClick={handleStudentDialogOpen} fullWidth>
+                                View Enrolled Students
+                            </Button>
+                        </Grid>
+                    </Grid>
                 </CardContent>
             </Card>
 
@@ -95,6 +136,37 @@ const CourseDetails = () => {
                 courseId={courseId} 
                 onAssignmentCreated={handleAssignmentCreated} 
             />
+
+            <Dialog open={studentDialogOpen} onClose={handleStudentDialogClose} maxWidth="sm" fullWidth>
+                <DialogTitle>
+                    Enrolled Students
+                    <IconButton
+                        edge="end"
+                        color="inherit"
+                        onClick={handleStudentDialogClose}
+                        aria-label="close"
+                        sx={{ position: 'absolute', right: 8, top: 8 }}
+                    >
+                        <CloseIcon />
+                    </IconButton>
+                </DialogTitle>
+                <DialogContent>
+                    <List>
+                        {students.length > 0 ? (
+                            students.map(student => (
+                                <ListItem key={student._id}>
+                                    <Typography>{student.studentName}</Typography>
+                                </ListItem>
+                            ))
+                        ) : (
+                            <Typography>No students enrolled in this course.</Typography>
+                        )}
+                    </List>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleStudentDialogClose} color="primary">Close</Button>
+                </DialogActions>
+            </Dialog>
 
             <Snackbar open={snackbarOpen} autoHideDuration={6000} onClose={() => setSnackbarOpen(false)}>
                 <Alert onClose={() => setSnackbarOpen(false)} severity="success">
